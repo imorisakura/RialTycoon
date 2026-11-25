@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RialTycoon
 
-## Getting Started
+A GameFi tycoon game about trading tokenized real-world assets (RWA), built for the Rialo builders program.
+Public URL used in copy: **rialtycoon.rialo.app**
 
-First, run the development server:
+> Every price and balance in RialTycoon is a **local simulation**. Nothing talks to a Rialo RPC yet. See [Rialo status](#rialo-status).
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # optional: add NEXT_PUBLIC_PRIVY_APP_ID
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **No app ID** → the app runs a clearly-labeled **simulated sign-in** ("UI review only · no Google OAuth"). Use it to review the UI. It never pretends to be real OAuth.
+- **With an app ID** → real Google sign-in through Privy.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Production check: `npm run build && npm start`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Privy dashboard setup (for real Google sign-in)
 
-## Learn More
+1. Create an app at the Privy dashboard and copy its **App ID** into `.env.local` as `NEXT_PUBLIC_PRIVY_APP_ID`.
+2. Login methods: enable **Google only**. Leave every wallet / external wallet option off.
+3. Embedded wallets: Ethereum, create on login for users without wallets (the code also sets this).
+4. MFA: enable **Passkey** and **Authenticator app (TOTP)**. Keep **SMS disabled**.
+5. Add your dev and production origins (for example `http://localhost:3000` and `https://rialtycoon.rialo.app`) to the allowed domains.
+6. Never commit `.env.local`. The app needs no secret; `NEXT_PUBLIC_PRIVY_APP_ID` is public.
 
-To learn more about Next.js, take a look at the following resources:
+## How it is built
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Area | Where | Notes |
+|---|---|---|
+| Welcome opening | `src/components/opening/Opening.tsx` | GSAP ScrollTrigger, one pinned section, 4 horizontal panels, `scrub: 1`, `end: "+=" + track width`, snap per panel. Progress bar, `01 / 04` HUD, dot navigation, Skip intro. Inactive panels are `inert` + hidden. `prefers-reduced-motion` renders a stacked, non-pinned layout. |
+| Landing page | `src/components/landing/Landing.tsx` | Navbar, hero, demo market panel, ticker, stats, featured assets, How to play, Why Rialo mapping, CTA, footer. Sticky "Sign in with Google" button on the whole page. |
+| Auth | `src/lib/auth/*` | One `AuthApi` interface: `privy-auth.tsx` (real) and `sim-auth.tsx` (labeled simulation). `loginMethods: ["google"]`, no wallet UI. |
+| Session check | `src/app/api/session/route.ts` | Verifies the Privy access token server-side against Privy's public JWKS (issuer `privy.io`, audience = app ID). Privy verifies the Google id_token during OAuth; the player identity is the Google `sub` (`user.google.subject`). |
+| MFA policy | `src/lib/mfa/*` | 2FA only for: large sell (above threshold, default 100), auction bid, withdraw, export wallet, new device. Verification cached 15 minutes. Never forced at onboarding; a nudge + Security Center instead. |
+| Game | `src/lib/game/*`, `src/components/game/*` | Zustand store (persisted locally), 8 assets in 4 classes, 14 world events, cycles, yield, rivals, sealed-bid auction, season leaderboard by return on capital, Tycoon tiers to 25,000 $RIALO. |
+| Rialo adapter | `src/lib/rialo/adapter.ts` | Interface + mock implementation. The only place game code touches "the chain". |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Wallet ordering
 
-## Deploy on Vercel
+Privy creates the embedded wallet **after** the first login, not during it. The app never calls `createWallet` and never creates a Solana wallet, so it cannot block the EVM wallet slot. The onboarding screen waits for the wallet to appear before claiming the (simulated) faucet grant.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Rialo status
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Rialo is its own SVM-compatible Layer 1 by Subzero Labs. It is not Solana.
+- Documented devnet RPC: `https://api.devnet.rialo.xyz` (in the official CDK examples). **Not verified as live** (a live check timed out on 26 Nov 2026), so the app does not use it.
+- The live adapter comes after the Rialo team or Discord Builder Hub confirms devnet access. The future on-chain path is a Rust program with `rialo-cdk` (Venus DSL), tested locally with `TestContext` first.
+
+| Mechanic | Rialo feature that would power it |
+|---|---|
+| Live prices | Native HTTPS calls (no third-party oracle) |
+| World events | Reactivity (ON / EVERY triggers, no keeper bots) |
+| Auction & loot fairness | TEE randomness + confidential execution |
+| Yield & cycle timing | Scheduled transactions |
+| Google identity | Rialo Identity |
+
+## What is still simulated or unverified
+
+- All prices, balances, yield, rivals, the faucet grant and the auction reveal (mock adapter).
+- The session key step and withdrawals (withdraw runs the 2FA gate, then explains it is disabled until devnet is verified).
+- Device trust is kept in the browser (`localStorage`); Security Center "revoke" resets that list.
+- TOTP limits (5-minute code, 4 wrong attempts) are enforced by the simulated flow. With a real app ID the code entry happens in Privy's own MFA modal, so confirm those limits in Privy's settings.
+- The JWKS URL in `/api/session` follows Privy's documented pattern; confirm it once a real app ID exists.
+
+## For the Rialo Discord presentation
+
+Demo script (about 4 minutes):
+
+1. **Opening scroll.** Open the site and scroll slowly: the gold vault coin spins, breaks into six asset cards, then "Why Rialo" and "Sign in and play". Point out the `01 / 04` HUD, the dots and Skip intro.
+2. **Google sign-in.** Click "Sign in with Google". Show the onboarding steps: Google verified → identity bound to the Google sub → embedded wallet created → session key → 10,000 $RIALO faucet grant. Note that the player never sees a seed phrase or wallet pop-up.
+3. **One event moving prices.** In the terminal buy some Oil, press **Next cycle** until a geopolitics event like "Shipping lanes disrupted in a key oil strait" appears in World Events, and show Oil jumping in Market Live. Explain that on Rialo this would be reactivity plus native HTTPS calls.
+4. **One MFA-gated action.** Sell a small amount (no prompt), then a sell above 100 $RIALO or an auction bid: the 2FA gate appears (Passkey or authenticator app). Show the Security Center: SMS is disabled, 2FA is optional and never forced at onboarding.
+5. Close on the "Why Rialo?" panel and the honest status: simulation today, live adapter after devnet access is confirmed.
