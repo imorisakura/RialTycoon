@@ -1,7 +1,8 @@
 # RialTycoon
 
 A GameFi tycoon game about trading tokenized real-world assets (RWA), built for the Rialo builders program.
-Public URL used in copy: **rialtycoon.rialo.app**
+Live demo: **https://rial-tycoon.vercel.app** (deployed on Vercel from `main`)
+Public URL used in copy: **rialtycoon.rialo.app** (needs to be provided by the Rialo team)
 
 > Every price and balance in RialTycoon is a **local simulation**. Nothing talks to a Rialo RPC yet. See [Rialo status](#rialo-status).
 
