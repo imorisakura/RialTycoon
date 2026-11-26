@@ -6,6 +6,7 @@ import { GoogleButton } from "@/components/ui/GoogleButton";
 import { Modal } from "@/components/ui/Modal";
 import { truncate, useAuth, type SessionCheck } from "@/lib/auth/context";
 import { useMfaGate } from "@/lib/mfa/gate";
+import { KeyIcon, ShieldIcon } from "@/components/ui/Icons";
 import { netWorthOf, useGame } from "@/lib/game/store";
 import { RialoInfoModal, SimBadge, TargetBar } from "./bits";
 import { Dashboard } from "./Dashboard";
@@ -59,8 +60,8 @@ function Terminal() {
 
       <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 px-3 py-2.5 md:px-5">
-          <Link href="/" className="font-semibold">
-            Rial<span className="text-gold">Tycoon</span>
+          <Link href="/" className="font-display text-2xl leading-none">
+            Rial<span className="italic text-gold">Tycoon</span>
           </Link>
           <SimBadge />
           <nav className="order-last flex w-full gap-1 overflow-x-auto md:order-none md:ml-4 md:w-auto" aria-label="Game tabs">
@@ -79,8 +80,8 @@ function Terminal() {
             <button onClick={() => setInfoOpen(true)} className="hidden rounded-lg border border-line px-3 py-1.5 text-xs text-muted hover:text-ink sm:block">
               Why Rialo?
             </button>
-            <Link href="/security" className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted hover:text-ink">
-              🛡️ Security
+            <Link href="/security" className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs text-muted hover:text-ink">
+              <ShieldIcon className="h-3.5 w-3.5" /> Security
             </Link>
             <ProfileChip />
           </div>
@@ -146,7 +147,7 @@ function MfaNudge() {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm">
       <p>
-        🔑 Protect large sells, bids, withdrawals and wallet export with a <strong>passkey</strong>. Optional — trading stays instant.
+        <KeyIcon className="mr-1.5 inline h-4 w-4 -translate-y-px text-gold" />Protect large sells, bids, withdrawals and wallet export with a <strong>passkey</strong>. Optional — trading stays instant.
       </p>
       <div className="flex gap-2">
         <Link href="/security" className="rounded-lg bg-gold px-3 py-1.5 font-semibold text-black">

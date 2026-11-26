@@ -1,9 +1,16 @@
 "use client";
 
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
+import { useEffect, useRef } from "react";
 import { GoogleButton } from "@/components/ui/GoogleButton";
-import { Badge } from "@/components/ui/Modal";
+import { AssetIcon } from "@/components/ui/Icons";
 import { Delta, Sparkline } from "@/components/ui/Sparkline";
+import { ASSET_BY_ID, ASSET_CLASSES } from "@/lib/game/data";
 import { useDemoPrices, type DemoQuote } from "./useDemoPrices";
+
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 export const RIALO_MAPPING = [
   { mechanic: "Live prices", feature: "Native HTTPS calls", detail: "Contracts read price APIs directly — no third-party oracle." },
@@ -19,120 +26,189 @@ const NAV = [
   { href: "#why-rialo", label: "Why Rialo" },
 ];
 
+const STEPS = [
+  ["Sign in with Google", "An embedded wallet is created for you and 10,000 $RIALO lands on devnet (simulated). No seed phrase, ever."],
+  ["Read the world", "Each cycle, world events move the market. A strait closes, oil jumps. Rates fall, property climbs."],
+  ["Become a Tycoon", "Collect yield, time your exits and grow to 25,000 $RIALO. The season leaderboard ranks return on capital."],
+];
+
+function useReveals(root: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = root.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const ctx = gsap.context(() => {
+      el.querySelectorAll<HTMLElement>("[data-split]").forEach((h) => {
+        const split = SplitText.create(h, { type: "lines", mask: "lines" });
+        gsap.from(split.lines, {
+          yPercent: 110,
+          duration: 1.1,
+          ease: "expo.out",
+          stagger: 0.08,
+          scrollTrigger: { trigger: h, start: "top 85%" },
+        });
+      });
+      gsap.set("[data-reveal]", { y: 40, opacity: 0 });
+      ScrollTrigger.batch("[data-reveal]", {
+        start: "top 88%",
+        onEnter: (batch) => gsap.fromTo(batch, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: "power3.out", stagger: 0.07, overwrite: true }),
+      });
+    }, el);
+    return () => ctx.revert();
+  }, [root]);
+}
+
 export function Landing() {
   const quotes = useDemoPrices();
+  const ref = useRef<HTMLDivElement>(null);
+  useReveals(ref);
+
   return (
-    <div id="landing" className="relative">
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-8">
-          <a href="#landing" className="flex items-center gap-2 font-semibold">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-gold-bright to-gold-deep text-sm font-black text-black">R</span>
-            <span>
-              Rial<span className="text-gold">Tycoon</span>
-            </span>
+    <div id="landing" ref={ref} className="relative bg-bg">
+      <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-bg/75 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 md:px-10">
+          <a href="#landing" className="font-display text-2xl leading-none">
+            Rial<span className="italic text-gold">Tycoon</span>
           </a>
-          <nav className="hidden gap-6 text-sm text-muted md:flex">
+          <nav className="hidden gap-8 md:flex">
             {NAV.map((n) => (
-              <a key={n.href} href={n.href} className="hover:text-ink">
+              <a key={n.href} href={n.href} className="eyebrow text-muted transition hover:text-ink">
                 {n.label}
               </a>
             ))}
           </nav>
-          <GoogleButton size="sm" />
+          <div className="hidden sm:block">
+            <GoogleButton size="sm" />
+          </div>
         </div>
       </header>
 
       <Ticker quotes={quotes} />
 
-      <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:grid-cols-[1.1fr_1fr] md:px-8 md:py-24">
-        <div>
-          <Badge>Built for Rialo · Devnet preview</Badge>
-          <h1 className="mt-5 text-4xl font-bold leading-tight md:text-6xl">
-            Own real-world assets. <span className="gold-text">Play it like a tycoon.</span>
-          </h1>
-          <p className="mt-5 max-w-lg text-lg text-muted">
-            Gold, oil, the S&amp;P 500 and Jakarta CBD property — tokenized, tradable and moved by world events. Grow 10,000 $RIALO
-            into a 25,000 empire.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <GoogleButton size="lg" />
-            <span className="text-sm text-muted">No wallet extension. No seed phrase.</span>
+      {/* Hero */}
+      <section className="mx-auto max-w-7xl px-5 pb-20 pt-20 md:px-10 md:pb-28 md:pt-28">
+        <p className="eyebrow text-gold" data-reveal>
+          Built for Rialo · Devnet preview
+        </p>
+        <h1 data-split className="mt-6 max-w-5xl font-display text-[15vw] leading-[0.88] tracking-[-0.02em] md:text-[8.5vw] xl:text-[128px]">
+          Own the real world. <em className="text-gold">Play it like a tycoon.</em>
+        </h1>
+        <div className="mt-14 grid gap-12 md:grid-cols-[1fr_1.15fr] md:items-end">
+          <div data-reveal>
+            <p className="max-w-md text-lg leading-relaxed text-ink/75">
+              Gold, oil, the S&amp;P 500 and Jakarta CBD property — tokenized, tradable and moved by world events. Grow 10,000 $RIALO into
+              a 25,000 empire.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-5">
+              <GoogleButton size="lg" />
+              <span className="eyebrow text-muted">No extension · No seed phrase</span>
+            </div>
           </div>
+          <MarketPanel quotes={quotes} />
         </div>
-        <MarketPanel quotes={quotes} />
       </section>
 
-      <section aria-label="Stats" className="border-y border-line bg-panel/50">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-8 md:grid-cols-4 md:px-8">
+      {/* Stats */}
+      <section aria-label="Stats" className="border-y border-white/[0.07]">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 md:grid-cols-4">
           {[
-            ["8", "Tradable RWA assets"],
+            ["8", "Tradable real-world assets"],
             ["14", "World events that move prices"],
-            ["10,000", "$RIALO starting grant"],
-            ["25,000", "Net worth to reach Tycoon"],
-          ].map(([v, l]) => (
-            <div key={l}>
-              <p className="tabular text-3xl font-bold text-gold">{v}</p>
-              <p className="text-sm text-muted">{l}</p>
+            ["10k", "$RIALO starting grant"],
+            ["25k", "Net worth to reach Tycoon"],
+          ].map(([v, l], i) => (
+            <div key={l} data-reveal className={`px-5 py-10 md:px-10 ${i % 2 ? "" : "border-r"} border-white/[0.07] md:border-r md:last:border-r-0`}>
+              <p className="font-display text-6xl leading-none text-gold md:text-7xl">{v}</p>
+              <p className="eyebrow mt-3 text-muted">{l}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section id="markets" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 md:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-3xl font-bold md:text-4xl">Featured assets</h2>
-          <Badge tone="warn">Demo prices · simulation</Badge>
+      {/* Featured assets */}
+      <section id="markets" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-24 md:px-10 md:py-32">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow text-gold">01 — Markets</p>
+            <h2 data-split className="mt-4 font-display text-5xl leading-[0.95] md:text-7xl">
+              Featured assets
+            </h2>
+          </div>
+          <p className="eyebrow text-amber-300/80">Demo prices · simulation</p>
         </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid border-l border-t border-white/[0.07] sm:grid-cols-2 lg:grid-cols-4">
           {quotes
             .filter((q) => ["GOLD", "OIL", "SPX", "SCBD"].includes(q.id))
-            .map((q) => (
-              <div key={q.id} className="rounded-2xl border border-line bg-panel p-5 transition hover:border-gold/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl">{q.icon}</span>
-                  <span className="font-mono text-xs text-muted">{q.ticker}</span>
+            .map((q, i) => (
+              <article
+                key={q.id}
+                data-reveal
+                className="group relative border-b border-r border-white/[0.07] p-6 transition-colors duration-500 hover:bg-gold/[0.04] md:p-7"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="font-mono text-xs text-muted">0{i + 1}</span>
+                  <AssetIcon id={q.id} className="h-7 w-7 text-gold transition-transform duration-500 group-hover:-translate-y-1" />
                 </div>
-                <p className="mt-4 font-semibold">{q.name}</p>
-                <p className="tabular mt-1 text-2xl font-bold">{q.price.toFixed(2)}</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <Delta value={q.change} className="text-sm" />
-                  <Sparkline points={q.points} />
+                <h3 className="mt-14 font-display text-4xl leading-none">{q.name}</h3>
+                <p className="eyebrow mt-2 text-muted">
+                  {q.ticker} · {ASSET_CLASSES[ASSET_BY_ID[q.id].classId].name}
+                </p>
+                <div className="mt-8 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="tabular font-mono text-2xl">{q.price.toFixed(2)}</p>
+                    <Delta value={q.change} className="mt-1 block text-xs" />
+                  </div>
+                  <Sparkline points={q.points} width={104} height={36} />
                 </div>
-              </div>
+                <span className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-gold transition-transform duration-500 group-hover:scale-x-100" />
+              </article>
             ))}
         </div>
       </section>
 
-      <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 md:px-8">
-        <h2 className="text-3xl font-bold md:text-4xl">How to play</h2>
-        <ol className="mt-8 grid gap-4 md:grid-cols-3">
-          {[
-            ["Sign in with Google", "An embedded wallet is created for you and you receive 10,000 $RIALO on devnet (simulated)."],
-            ["Read the world, trade the market", "Each cycle, world events move prices. Buy what benefits, sell what doesn't, and collect yield."],
-            ["Climb the Tycoon tiers", "Grow your net worth to 25,000 $RIALO and top the season leaderboard by return on capital."],
-          ].map(([t, d], i) => (
-            <li key={t} className="rounded-2xl border border-line bg-panel p-6">
-              <span className="font-mono text-gold">0{i + 1}</span>
-              <p className="mt-3 text-lg font-semibold">{t}</p>
-              <p className="mt-2 text-sm text-muted">{d}</p>
-            </li>
-          ))}
-        </ol>
+      {/* How to play */}
+      <section id="how" className="scroll-mt-20 border-t border-white/[0.07]">
+        <div className="mx-auto max-w-7xl px-5 py-24 md:px-10 md:py-32">
+          <p className="eyebrow text-gold">02 — How to play</p>
+          <h2 data-split className="mt-4 max-w-3xl font-display text-5xl leading-[0.95] md:text-7xl">
+            Three moves from <em className="text-gold">intern to tycoon.</em>
+          </h2>
+          <ol className="mt-16 grid gap-12 md:grid-cols-3 md:gap-10">
+            {STEPS.map(([t, d], i) => (
+              <li key={t} data-reveal className="border-t border-white/15 pt-6">
+                <span className="font-display text-7xl leading-none text-white/15">0{i + 1}</span>
+                <p className="mt-6 font-display text-3xl">{t}</p>
+                <p className="mt-3 text-sm leading-relaxed text-muted">{d}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
 
-      <section id="why-rialo" className="scroll-mt-20 border-y border-line bg-panel/40">
-        <div className="mx-auto max-w-6xl px-4 py-20 md:px-8">
-          <h2 className="text-3xl font-bold md:text-4xl">Why Rialo</h2>
-          <p className="mt-3 max-w-2xl text-muted">
-            Rialo is its own SVM-compatible Layer 1 by Subzero Labs. Each game mechanic maps to a Rialo-native feature that would power
-            it for real. Today every price and balance is a local simulation.
-          </p>
-          <div className="mt-8 overflow-hidden rounded-2xl border border-line">
-            {RIALO_MAPPING.map((m) => (
-              <div key={m.mechanic} className="grid gap-1 border-b border-line bg-panel px-5 py-4 last:border-b-0 md:grid-cols-[1fr_auto_1fr_2fr] md:items-center md:gap-4">
-                <span className="font-semibold">{m.mechanic}</span>
-                <span className="hidden text-gold md:block">→</span>
-                <span className="text-gold">{m.feature}</span>
+      {/* Why Rialo */}
+      <section id="why-rialo" className="scroll-mt-20 border-t border-white/[0.07] bg-[#0d0c0a]">
+        <div className="mx-auto max-w-7xl px-5 py-24 md:px-10 md:py-32">
+          <div className="grid gap-8 md:grid-cols-[1fr_1.2fr] md:items-end">
+            <div>
+              <p className="eyebrow text-gold">03 — Why Rialo</p>
+              <h2 data-split className="mt-4 font-display text-5xl leading-[0.95] md:text-7xl">
+                Every mechanic, <em className="text-gold">native to the chain.</em>
+              </h2>
+            </div>
+            <p data-reveal className="max-w-lg text-muted md:justify-self-end">
+              Rialo is its own SVM-compatible Layer 1 by Subzero Labs. Each game mechanic maps to a Rialo-native feature that would power it
+              for real. Today every price and balance is a local simulation.
+            </p>
+          </div>
+          <div className="mt-14 border-t border-white/10">
+            {RIALO_MAPPING.map((m, i) => (
+              <div
+                key={m.mechanic}
+                data-reveal
+                className="group grid gap-2 border-b border-white/10 py-6 transition-colors hover:bg-white/[0.02] md:grid-cols-[60px_1fr_1fr_1.4fr] md:items-baseline md:gap-6"
+              >
+                <span className="font-mono text-xs text-muted">0{i + 1}</span>
+                <span className="font-display text-3xl">{m.mechanic}</span>
+                <span className="font-display text-3xl italic text-gold">→ {m.feature}</span>
                 <span className="text-sm text-muted">{m.detail}</span>
               </div>
             ))}
@@ -140,22 +216,31 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-20 md:px-8">
-        <div className="flex flex-col items-start justify-between gap-6 rounded-3xl border border-gold/30 bg-gradient-to-br from-gold/15 via-panel to-panel p-8 md:flex-row md:items-center md:p-12">
-          <div>
-            <h2 className="text-3xl font-bold">Start your empire in one click.</h2>
-            <p className="mt-2 text-muted">Google sign-in. Secure embedded wallet. 2FA only when it matters.</p>
+      {/* Final CTA */}
+      <section className="relative overflow-hidden border-t border-white/[0.07]">
+        <div className="pointer-events-none absolute -right-40 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-gold/20 blur-[140px]" />
+        <div className="relative mx-auto max-w-7xl px-5 py-28 md:px-10 md:py-40">
+          <h2 data-split className="max-w-4xl font-display text-6xl leading-[0.9] md:text-[9vw] xl:text-[136px]">
+            Start your empire <em className="text-gold">in one click.</em>
+          </h2>
+          <div data-reveal className="mt-12 flex flex-wrap items-center gap-6">
+            <GoogleButton size="lg" />
+            <p className="max-w-xs text-sm text-muted">Google sign-in. Secure embedded wallet. 2FA only when it matters.</p>
           </div>
-          <GoogleButton size="lg" />
         </div>
       </section>
 
-      <footer className="border-t border-line pb-28 pt-10">
-        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-4 px-4 text-sm text-muted md:flex-row md:px-8">
-          <p>
-            <span className="text-ink">RialTycoon</span> · rialtycoon.rialo.app
+      <footer className="border-t border-white/[0.07] pb-28 pt-14">
+        <div className="mx-auto max-w-7xl px-5 md:px-10">
+          <p aria-hidden="true" className="text-outline select-none font-display text-[20vw] leading-[0.8] md:text-[15vw]">
+            RialTycoon
           </p>
-          <p>All prices and balances are simulated. Not financial advice. Built for the Rialo builders program.</p>
+          <div className="mt-10 flex flex-col justify-between gap-4 text-sm text-muted md:flex-row">
+            <p>
+              <span className="text-ink">RialTycoon</span> · rialtycoon.rialo.app
+            </p>
+            <p>All prices and balances are simulated. Not financial advice. Built for the Rialo builders program.</p>
+          </div>
         </div>
       </footer>
     </div>
@@ -165,16 +250,18 @@ export function Landing() {
 function Ticker({ quotes }: { quotes: DemoQuote[] }) {
   const row = [...quotes, ...quotes];
   return (
-    <div className="overflow-hidden border-b border-line bg-panel/70 py-2" aria-label="Demo price ticker">
-      <div className="marquee flex w-max gap-8 whitespace-nowrap text-sm">
+    <div className="overflow-hidden border-b border-white/[0.07] py-3" aria-label="Demo price ticker">
+      <div className="marquee flex w-max items-center gap-10 whitespace-nowrap">
         {row.map((q, i) => (
-          <span key={i} className="flex items-center gap-2" aria-hidden={i >= quotes.length}>
-            <span className="font-mono text-muted">{q.ticker}</span>
-            <span className="tabular">{q.price.toFixed(2)}</span>
+          <span key={i} className="flex items-center gap-3" aria-hidden={i >= quotes.length}>
+            <AssetIcon id={q.id} className="h-4 w-4 text-gold/70" />
+            <span className="font-display text-xl">{q.name}</span>
+            <span className="tabular font-mono text-sm text-ink/80">{q.price.toFixed(2)}</span>
             <Delta value={q.change} className="text-xs" />
+            <span className="text-white/15">/</span>
           </span>
         ))}
-        <span className="text-xs uppercase tracking-wider text-amber-300">Demo prices · simulation</span>
+        <span className="eyebrow text-amber-300/80">Demo prices · simulation</span>
       </div>
     </div>
   );
@@ -182,21 +269,21 @@ function Ticker({ quotes }: { quotes: DemoQuote[] }) {
 
 function MarketPanel({ quotes }: { quotes: DemoQuote[] }) {
   return (
-    <div className="rounded-3xl border border-line bg-panel p-5 shadow-2xl shadow-black/40">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="flex items-center gap-2 text-sm font-semibold">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-up" /> Market panel
+    <div data-reveal className="border border-white/10 bg-white/[0.02] backdrop-blur">
+      <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
+        <span className="eyebrow flex items-center gap-2 text-ink">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-up" /> Market panel
         </span>
-        <Badge tone="warn">Demo · simulation</Badge>
+        <span className="eyebrow text-amber-300/80">Demo · simulation</span>
       </div>
-      <div className="divide-y divide-line">
+      <div className="divide-y divide-white/[0.06]">
         {quotes.slice(0, 6).map((q) => (
-          <div key={q.id} className="grid grid-cols-[1.4fr_1fr_auto] items-center gap-3 py-2.5 text-sm">
-            <span className="flex items-center gap-2">
-              <span>{q.icon}</span>
-              <span>{q.name}</span>
+          <div key={q.id} className="grid grid-cols-[1.5fr_1fr_auto] items-center gap-3 px-5 py-3">
+            <span className="flex items-center gap-3">
+              <AssetIcon id={q.id} className="h-4 w-4 text-gold" />
+              <span className="font-display text-lg leading-none">{q.name}</span>
             </span>
-            <span className="tabular text-right">{q.price.toFixed(2)}</span>
+            <span className="tabular text-right font-mono text-sm">{q.price.toFixed(2)}</span>
             <Delta value={q.change} className="w-20 text-right text-xs" />
           </div>
         ))}

@@ -42,9 +42,9 @@ export function SimBadge() {
 
 export function Panel({ title, right, children, className = "" }: { title: string; right?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`flex min-h-0 flex-col rounded-2xl border border-line bg-panel ${className}`}>
-      <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">{title}</h2>
+    <section className={`flex min-h-0 flex-col rounded-xl border border-white/[0.07] bg-panel shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${className}`}>
+      <header className="flex items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-3">
+        <h2 className="eyebrow text-muted">{title}</h2>
         {right}
       </header>
       <div className="min-h-0 flex-1 p-4">{children}</div>

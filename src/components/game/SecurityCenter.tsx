@@ -10,6 +10,7 @@ import { useGame } from "@/lib/game/store";
 import { useMfaGate } from "@/lib/mfa/gate";
 import { ACTION_COPY, MFA_CACHE_MS, type SensitiveAction } from "@/lib/mfa/policy";
 import { getDeviceId } from "./GameApp";
+import { ClockIcon, KeyIcon } from "@/components/ui/Icons";
 
 export function SecurityCenter() {
   const auth = useAuth();
@@ -66,7 +67,7 @@ export function SecurityCenter() {
           <Link href="/play" className="text-sm text-muted hover:text-ink">
             ← Back to the terminal
           </Link>
-          <h1 className="mt-1 text-3xl font-bold">Security Center</h1>
+          <h1 className="mt-2 font-display text-5xl leading-none">Security Center</h1>
         </div>
         {auth.mode === "simulated" && <Badge tone="warn">Simulated sign-in · UI review only</Badge>}
       </div>
@@ -100,16 +101,16 @@ export function SecurityCenter() {
         <ul className="mt-4 space-y-2 text-sm">
           <li className="flex items-center justify-between rounded-xl border border-line p-3">
             <span>
-              🔑 Passkey <span className="text-xs text-gold">recommended</span>
+              <KeyIcon className="mr-2 inline h-4 w-4 text-gold" />Passkey <span className="text-xs text-gold">recommended</span>
             </span>
             <span className="text-muted">{enrolled.includes("passkey") ? "Enrolled" : "Not enrolled"}</span>
           </li>
           <li className="flex items-center justify-between rounded-xl border border-line p-3">
-            <span>⏱️ Authenticator app (TOTP) · fallback</span>
+            <span><ClockIcon className="mr-2 inline h-4 w-4 text-gold" />Authenticator app (TOTP) · fallback</span>
             <span className="text-muted">{enrolled.includes("totp") ? "Enrolled" : "Not enrolled"}</span>
           </li>
           <li className="flex items-center justify-between rounded-xl border border-line p-3 opacity-60">
-            <span>📱 SMS</span>
+            <span>SMS</span>
             <span className="text-muted">Disabled (SIM-swap risk)</span>
           </li>
         </ul>

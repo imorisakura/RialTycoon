@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Modal";
+import { AssetIcon, SourceIcon } from "@/components/ui/Icons";
 import { Delta, Sparkline } from "@/components/ui/Sparkline";
 import { useToast } from "@/components/ui/Toasts";
 import { ASSETS, ASSET_BY_ID, ASSET_CLASSES, type AssetId } from "@/lib/game/data";
@@ -58,7 +59,7 @@ function Command({ selected }: { selected: AssetId }) {
       <div className="flex h-full flex-col gap-4">
         <div>
           <p className="text-xs text-muted">Net worth</p>
-          <p className="text-3xl font-bold">
+          <p className="font-display text-5xl leading-none">
             <AnimatedNumber value={netWorth} /> <span className="text-sm font-normal text-muted">$RIALO</span>
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
@@ -79,7 +80,7 @@ function Command({ selected }: { selected: AssetId }) {
         <div className="rounded-xl border border-line p-3">
           <div className="flex items-center justify-between">
             <p className="font-semibold">
-              {asset.icon} {asset.name}
+              <span className="inline-flex items-center gap-2"><AssetIcon id={asset.id} className="h-5 w-5 text-gold" /><span className="font-display text-2xl font-normal leading-none">{asset.name}</span></span>
             </p>
             <span className="tabular text-sm">{fmt(price)}</span>
           </div>
@@ -167,7 +168,7 @@ function MarketLive({ selected, onSelect }: { selected: AssetId; onSelect: (id: 
           <tbody>
             {ASSETS.map((a) => {
               const change = prices[a.id] / prevOf(history[a.id]) - 1;
-              const heat = Math.min(0.35, Math.abs(change) * 6);
+              const heat = Math.min(0.16, Math.abs(change) * 3);
               const owned = (holdings[a.id]?.qty ?? 0) > 0;
               return (
                 <tr
@@ -179,7 +180,7 @@ function MarketLive({ selected, onSelect }: { selected: AssetId; onSelect: (id: 
                 >
                   <td className="py-2.5 pr-2">
                     <button className="flex items-center gap-2 text-left" onClick={() => onSelect(a.id)}>
-                      <span>{a.icon}</span>
+                      <AssetIcon id={a.id} className="h-5 w-5 shrink-0 text-gold/80" />
                       <span>
                         <span className="font-medium">{a.name}</span>
                         <span className="ml-1.5 font-mono text-[10px] text-muted">{a.ticker}</span>
@@ -188,7 +189,7 @@ function MarketLive({ selected, onSelect }: { selected: AssetId; onSelect: (id: 
                     </button>
                   </td>
                   <td className="hidden text-xs text-muted md:table-cell">{ASSET_CLASSES[a.classId].name}</td>
-                  <td className="tabular text-right font-semibold">{fmt(prices[a.id])}</td>
+                  <td className="text-right"><PriceCell value={prices[a.id]} /></td>
                   <td className="text-right">
                     <Delta value={change} className="text-xs" />
                   </td>
@@ -206,7 +207,6 @@ function MarketLive({ selected, onSelect }: { selected: AssetId; onSelect: (id: 
   );
 }
 
-const SOURCE_ICON: Record<string, string> = { Geopolitics: "🌍", Economy: "🏦", Climate: "🌦️", Technology: "🔋", Markets: "📊" };
 
 function WorldEvents({ onOpenInfo }: { onOpenInfo: () => void }) {
   const feed = useGame((s) => s.feed);
@@ -226,7 +226,7 @@ function WorldEvents({ onOpenInfo }: { onOpenInfo: () => void }) {
             <motion.li key={f.id} layout initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className={`rounded-xl border p-3 ${kindStyle(f)}`}>
               <p className="font-mono text-[10px] tracking-wider text-muted">{f.header}</p>
               <p className="mt-1 text-sm font-medium">
-                {f.source && <span className="mr-1">{SOURCE_ICON[f.source]}</span>}
+                {f.source && <SourceIcon source={f.source} className="mr-1.5 inline h-4 w-4 -translate-y-px text-gold" />}
                 {f.title}
               </p>
               {f.source && <p className="text-[11px] text-gold">{f.source}</p>}
@@ -242,3 +242,18 @@ function WorldEvents({ onOpenInfo }: { onOpenInfo: () => void }) {
 
 const kindStyle = (f: FeedEntry) =>
   f.kind === "event" ? "border-gold/30 bg-gold/5" : f.kind === "yield" ? "border-up/30 bg-up/5" : f.kind === "auction" ? "border-purple-400/30 bg-purple-400/5" : "border-line bg-white/[0.02]";
+
+/** Price cell that flashes gold whenever the price changes. */
+function PriceCell({ value }: { value: number }) {
+  return (
+    <motion.span
+      key={value}
+      initial={{ backgroundColor: "rgba(232,184,74,0.35)" }}
+      animate={{ backgroundColor: "rgba(232,184,74,0)" }}
+      transition={{ duration: 1.2 }}
+      className="tabular rounded px-1.5 py-0.5 font-mono font-medium"
+    >
+      {fmt(value)}
+    </motion.span>
+  );
+}

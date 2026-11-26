@@ -31,7 +31,7 @@ Production check: `npm run build && npm start`.
 
 | Area | Where | Notes |
 |---|---|---|
-| Welcome opening | `src/components/opening/Opening.tsx` | GSAP ScrollTrigger, one pinned section, 4 horizontal panels, `scrub: 1`, `end: "+=" + track width`, snap per panel. Progress bar, `01 / 04` HUD, dot navigation, Skip intro. Inactive panels are `inert` + hidden. `prefers-reduced-motion` renders a stacked, non-pinned layout. |
+| Welcome opening | `src/components/opening/Opening.tsx`, `vault-scene.ts` | "The Vault Mechanism": a procedural Three.js gold vault coin (no external 3D assets). One pinned section (400vh, `scrub: 1`, snap per chapter) drives a camera journey: coin with giant wrapped typography → exploded mechanism with asset-class labels → dive into a particle price-world ("Why Rialo") → coin reassembles beside the Google sign-in. Preloader, grain, adaptive resolution for slow GPUs. Progress bar, `01 / 04` HUD, dot nav, Skip intro; inactive chapters are `inert`. `prefers-reduced-motion` renders a stacked static layout; no WebGL falls back to a CSS coin. |
 | Landing page | `src/components/landing/Landing.tsx` | Navbar, hero, demo market panel, ticker, stats, featured assets, How to play, Why Rialo mapping, CTA, footer. Sticky "Sign in with Google" button on the whole page. |
 | Auth | `src/lib/auth/*` | One `AuthApi` interface: `privy-auth.tsx` (real) and `sim-auth.tsx` (labeled simulation). `loginMethods: ["google"]`, no wallet UI. |
 | Session check | `src/app/api/session/route.ts` | Verifies the Privy access token server-side against Privy's public JWKS (issuer `privy.io`, audience = app ID). Privy verifies the Google id_token during OAuth; the player identity is the Google `sub` (`user.google.subject`). |
@@ -69,7 +69,7 @@ Privy creates the embedded wallet **after** the first login, not during it. The 
 
 Demo script (about 4 minutes):
 
-1. **Opening scroll.** Open the site and scroll slowly: the gold vault coin spins, breaks into six asset cards, then "Why Rialo" and "Sign in and play". Point out the `01 / 04` HUD, the dots and Skip intro.
+1. **Opening scroll.** Open the site and scroll slowly: the gold vault coin turns and explodes into its mechanism (each layer an asset class), the camera dives through the rings into a world of price lines ("Why Rialo"), then the coin reassembles next to "Sign in with Google". Point out the `01 / 04` HUD, the dots and Skip intro. Use a laptop with a real GPU for the demo.
 2. **Google sign-in.** Click "Sign in with Google". Show the onboarding steps: Google verified → identity bound to the Google sub → embedded wallet created → session key → 10,000 $RIALO faucet grant. Note that the player never sees a seed phrase or wallet pop-up.
 3. **One event moving prices.** In the terminal buy some Oil, press **Next cycle** until a geopolitics event like "Shipping lanes disrupted in a key oil strait" appears in World Events, and show Oil jumping in Market Live. Explain that on Rialo this would be reactivity plus native HTTPS calls.
 4. **One MFA-gated action.** Sell a small amount (no prompt), then a sell above 100 $RIALO or an auction bid: the 2FA gate appears (Passkey or authenticator app). Show the Security Center: SMS is disabled, 2FA is optional and never forced at onboarding.

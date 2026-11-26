@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Modal";
+import { AssetIcon, VaultIcon } from "@/components/ui/Icons";
 import { useToast } from "@/components/ui/Toasts";
 import { useAuth } from "@/lib/auth/context";
 import { ASSET_BY_ID, ASSET_CLASSES, RARE_ITEM, STARTING_GRANT, type AssetId } from "@/lib/game/data";
@@ -38,7 +39,7 @@ export function PortfolioTab() {
                 <div key={id} className="rounded-2xl border border-line bg-panel-2 p-4">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">
-                      {a.icon} {a.name}
+                      <span className="inline-flex items-center gap-2"><AssetIcon id={a.id} className="h-5 w-5 text-gold" /><span className="font-display text-2xl font-normal leading-none">{a.name}</span></span>
                     </span>
                     <Badge tone="up">Owned</Badge>
                   </div>
@@ -84,7 +85,7 @@ export function PortfolioTab() {
         <Panel title="Items">
           {s.items.includes(RARE_ITEM.id) ? (
             <div className="rounded-xl border border-gold/40 bg-gold/10 p-3 text-sm">
-              <p className="font-semibold text-gold">🏆 {RARE_ITEM.name}</p>
+              <p className="font-semibold text-gold">{RARE_ITEM.name}</p>
               <p className="text-xs text-muted">{RARE_ITEM.description}</p>
             </div>
           ) : (
@@ -137,10 +138,10 @@ export function AuctionTab() {
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
       <Panel title={`Auction · round ${auction.round}`} right={<SimBadge />}>
         <div className="grid gap-6 md:grid-cols-[220px_1fr]">
-          <div className="grid aspect-square place-items-center rounded-2xl border border-gold/40 bg-gradient-to-br from-gold/30 via-panel-2 to-panel-2 text-7xl">🏛️</div>
+          <div className="grid aspect-square place-items-center rounded-2xl border border-gold/40 bg-gradient-to-br from-gold/30 via-panel-2 to-panel-2 text-7xl"><VaultIcon className="h-28 w-28 text-gold" /></div>
           <div>
             <Badge>Rare · cosmetic + small buff</Badge>
-            <h3 className="mt-2 text-2xl font-bold">{RARE_ITEM.name}</h3>
+            <h3 className="mt-3 font-display text-4xl leading-none">{RARE_ITEM.name}</h3>
             <p className="mt-1 text-sm text-muted">{RARE_ITEM.description}</p>
             <div className="mt-5 flex items-end gap-6">
               <div>
@@ -218,7 +219,7 @@ export function LeaderboardTab() {
     <section className="rounded-2xl border border-line bg-panel">
       <header className="flex flex-wrap items-end justify-between gap-2 border-b border-line px-5 py-4">
         <div>
-          <h2 className="text-xl font-bold">Season leaderboard</h2>
+          <h2 className="font-display text-4xl leading-none">Season leaderboard</h2>
           <p className="text-sm text-muted">Season 1 leaderboard · return on capital</p>
         </div>
         <SimBadge />

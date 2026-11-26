@@ -34,12 +34,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
-              className={`rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur ${
+              className={`rounded-xl border px-4 py-3 text-sm shadow-2xl shadow-black/60 ${
                 t.tone === "ok"
-                  ? "border-up/40 bg-up/15 text-ink"
+                  ? "border-up/40 bg-[#0e1a12] text-ink"
                   : t.tone === "error"
-                    ? "border-down/40 bg-down/15 text-ink"
-                    : "border-gold/40 bg-panel/90 text-ink"
+                    ? "border-down/40 bg-[#1d0f10] text-ink"
+                    : "border-gold/40 bg-panel text-ink"
               }`}
             >
               {t.text}

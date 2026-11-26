@@ -7,7 +7,6 @@ export interface DemoQuote {
   id: AssetId;
   name: string;
   ticker: string;
-  icon: string;
   price: number;
   change: number;
   points: number[];
@@ -17,7 +16,7 @@ function seed(): DemoQuote[] {
   return ASSETS.map((a, i) => {
     const pts = [a.startPrice];
     for (let k = 0; k < 15; k++) pts.push(pts[pts.length - 1] * (1 + Math.sin(i * 7 + k) * 0.012));
-    return { id: a.id, name: a.name, ticker: a.ticker, icon: a.icon, price: pts[pts.length - 1], change: pts[pts.length - 1] / pts[0] - 1, points: pts };
+    return { id: a.id, name: a.name, ticker: a.ticker, price: pts[pts.length - 1], change: pts[pts.length - 1] / pts[0] - 1, points: pts };
   });
 }
 

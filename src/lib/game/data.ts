@@ -27,18 +27,17 @@ export interface AssetDef {
   ticker: string;
   classId: AssetClassId;
   startPrice: number;
-  icon: string;
 }
 
 export const ASSETS: AssetDef[] = [
-  { id: "GOLD", name: "Gold", ticker: "xGOLD", classId: "metals", startPrice: 236, icon: "🥇" },
-  { id: "OIL", name: "Oil", ticker: "xOIL", classId: "energy-agri", startPrice: 78, icon: "🛢️" },
-  { id: "SPX", name: "S&P 500", ticker: "xSPX", classId: "markets", startPrice: 512, icon: "📈" },
-  { id: "EURUSD", name: "EUR/USD", ticker: "xEUR", classId: "markets", startPrice: 108, icon: "💶" },
-  { id: "UST10Y", name: "US 10Y Bonds", ticker: "xUST", classId: "income", startPrice: 96, icon: "🏛️" },
-  { id: "SCBD", name: "SCBD Property", ticker: "xSCBD", classId: "income", startPrice: 420, icon: "🏙️" },
-  { id: "COFFEE", name: "Coffee", ticker: "xCOF", classId: "energy-agri", startPrice: 42, icon: "☕" },
-  { id: "COPPER", name: "Copper", ticker: "xCOP", classId: "metals", startPrice: 92, icon: "🟠" },
+  { id: "GOLD", name: "Gold", ticker: "xGOLD", classId: "metals", startPrice: 236 },
+  { id: "OIL", name: "Oil", ticker: "xOIL", classId: "energy-agri", startPrice: 78 },
+  { id: "SPX", name: "S&P 500", ticker: "xSPX", classId: "markets", startPrice: 512 },
+  { id: "EURUSD", name: "EUR/USD", ticker: "xEUR", classId: "markets", startPrice: 108 },
+  { id: "UST10Y", name: "US 10Y Bonds", ticker: "xUST", classId: "income", startPrice: 96 },
+  { id: "SCBD", name: "SCBD Property", ticker: "xSCBD", classId: "income", startPrice: 420 },
+  { id: "COFFEE", name: "Coffee", ticker: "xCOF", classId: "energy-agri", startPrice: 42 },
+  { id: "COPPER", name: "Copper", ticker: "xCOP", classId: "metals", startPrice: 92 },
 ];
 
 export const ASSET_BY_ID = Object.fromEntries(ASSETS.map((a) => [a.id, a])) as Record<AssetId, AssetDef>;
