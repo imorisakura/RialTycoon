@@ -4,7 +4,7 @@ A GameFi tycoon game about trading tokenized real-world assets (RWA), built for 
 Live demo: **https://rial-tycoon.vercel.app** (deployed on Vercel from `main`)
 Public URL used in copy: **rialtycoon.rialo.app** (needs to be provided by the Rialo team)
 
-> Every price and balance in RialTycoon is a **local simulation**. Nothing talks to a Rialo RPC yet. See [Rialo status](#rialo-status).
+> Balances are always **play money**. Prices are real in **Live Market** mode (third-party APIs, each quote labeled with its source) and simulated in **Simulation Season**. Nothing talks to a Rialo RPC yet. See [Live Market](#live-market-real-prices) and [Rialo status](#rialo-status).
 
 ## Quick start
 
@@ -18,6 +18,32 @@ npm run dev                  # http://localhost:3000
 - **With an app ID** → real Google sign-in through Privy.
 
 Production check: `npm run build && npm start`.
+
+## Live Market (real prices)
+
+The game has two modes, switched in the terminal header:
+
+- **Live Market** — 43 assets with real prices: 20 crypto assets, 14 US stocks and index ETFs, 6 commodities and 3 income/FX assets. Commodities and income are tracked through US-listed ETFs (GLD, SLV, USO, UNG, CPER, DBA, IEF, VNQ, FXE), and each asset names its proxy. Balances are play money: a separate 10,000 $RIALO live account.
+- **Simulation Season** — the original game: 8 assets, world events, cycles, yield, auction, and leaderboard, all simulated.
+
+| Data | Source | Freshness | Key |
+|---|---|---|---|
+| Crypto ticks | Coinbase Exchange public WebSocket | real time, 24/7 (pairs listed on Coinbase) | none |
+| Crypto prices + 24h change | CoinGecko Demo API | refreshed about every 10 min | `COINGECKO_API_KEY` |
+| US stocks & ETFs | Finnhub `/quote` | refreshed about every 60 s, US market hours only | `FINNHUB_API_KEY` |
+| Market news feed | Finnhub `/news` | about every 5 min | `FINNHUB_API_KEY` |
+
+Notes:
+- Stocks and ETFs only move during the US session (09:30–16:00 New York time, Mon–Fri; holidays are not modelled). Outside it, the game blocks stock/ETF trades. Only crypto trades 24/7.
+- Any asset without data shows **Sim · no data** and uses a clearly-labeled fallback price.
+- Free plans: CoinGecko Demo is about 10k calls/month, and Finnhub free is about 60 calls/min for personal use only. Check both providers' pricing pages before any commercial use.
+
+### Add the keys on Vercel
+1. Create a free CoinGecko Demo key (CoinGecko → Developer Dashboard) and a free Finnhub key (finnhub.io → Dashboard).
+2. In Vercel: Project → Settings → Environment Variables. Add `COINGECKO_API_KEY` and `FINNHUB_API_KEY` for Production (and Preview if you like). **Do not** prefix them with `NEXT_PUBLIC_`.
+3. Redeploy (Deployments → ⋯ → Redeploy). Open the Live Market: the status strip should say "CoinGecko: on" and "Finnhub … on".
+
+For local development, put the same two lines in `.env.local` (never commit it).
 
 ## Privy dashboard setup (for real Google sign-in)
 

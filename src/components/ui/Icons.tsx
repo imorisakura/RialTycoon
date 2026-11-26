@@ -72,3 +72,21 @@ export const VaultIcon = ({ className }: P) => (
     <path d="M12 7.5v1.5M12 14v1.5M8 11.5h1.5M14.5 11.5H16M6 19v1.5M18 19v1.5" />
   </svg>
 );
+
+export const CryptoIcon = ({ className }: P) => (
+  <svg {...base(className)}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M9.5 7.5h4a2 2 0 0 1 0 4h-4zM9.5 11.5h4.5a2 2 0 0 1 0 4H9.5zM9.5 7.5v8M11 6v1.5M13 6v1.5M11 15.5V17M13 15.5V17" />
+  </svg>
+);
+
+const LIVE_ICON: Record<string, AssetId> = {
+  GLD: "GOLD", SLV: "GOLD", USO: "OIL", UNG: "OIL", CPER: "COPPER", DBA: "COFFEE",
+  IEF: "UST10Y", VNQ: "SCBD", FXE: "EURUSD",
+};
+
+/** Icon for a Live Market asset (crypto coin, stock chart, or the matching commodity/income glyph). */
+export function LiveAssetIcon({ id, category, className }: P & { id: string; category: string }) {
+  if (category === "crypto") return <CryptoIcon className={className} />;
+  return <AssetIcon id={LIVE_ICON[id] ?? "SPX"} className={className} />;
+}

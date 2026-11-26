@@ -239,7 +239,7 @@ export function Landing() {
             <p>
               <span className="text-ink">RialTycoon</span> · rialtycoon.rialo.app
             </p>
-            <p>All prices and balances are simulated. Not financial advice. Built for the Rialo builders program.</p>
+            <p>Balances are play money. Landing prices are demo; in-game Live Market prices come from labeled third-party feeds. Not financial advice.</p>
           </div>
         </div>
       </footer>

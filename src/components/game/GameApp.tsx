@@ -9,11 +9,19 @@ import { useMfaGate } from "@/lib/mfa/gate";
 import { KeyIcon, ShieldIcon } from "@/components/ui/Icons";
 import { netWorthOf, useGame } from "@/lib/game/store";
 import { RialoInfoModal, SimBadge, TargetBar } from "./bits";
+import { useLive } from "@/lib/game/live-store";
+import { useLiveMarket } from "@/lib/market/useLiveMarket";
+import { LiveDashboard, LivePortfolio, LivePricesBadge, LiveStatus } from "./LiveTerminal";
 import { Dashboard } from "./Dashboard";
 import { AuctionTab, LeaderboardTab, PortfolioTab } from "./Tabs";
 
-const TABS = ["Dashboard", "Portfolio", "Auction", "Leaderboard"] as const;
-type Tab = (typeof TABS)[number];
+type Mode = "live" | "season";
+const TABS = {
+  live: ["Markets", "Portfolio"],
+  season: ["Dashboard", "Portfolio", "Auction", "Leaderboard"],
+} as const;
+type Tab = (typeof TABS)[Mode][number];
+const MODE_KEY = "rt-mode";
 
 export function GameApp() {
   const auth = useAuth();
@@ -49,9 +57,31 @@ function Terminal() {
   const user = auth.user!;
   const ownerId = useGame((s) => s.ownerId);
   const ready = ownerId === user.id;
-  const [tab, setTab] = useState<Tab>("Dashboard");
+  const [mode, setModeState] = useState<Mode>("live");
+  const [tab, setTab] = useState<Tab>("Markets");
   const [infoOpen, setInfoOpen] = useState(false);
   const netWorth = useGame(netWorthOf);
+  const ensureLive = useLive((s) => s.ensureAccount);
+  const liveData = useLiveMarket(mode === "live");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(MODE_KEY);
+      if (saved === "season") {
+        setModeState("season");
+        setTab("Dashboard");
+      }
+    } catch {}
+  }, []);
+  useEffect(() => ensureLive(user.id), [ensureLive, user.id]);
+
+  const setMode = (m: Mode) => {
+    setModeState(m);
+    setTab(TABS[m][0]);
+    try {
+      localStorage.setItem(MODE_KEY, m);
+    } catch {}
+  };
 
   return (
     <div className="min-h-dvh">
@@ -63,9 +93,21 @@ function Terminal() {
           <Link href="/" className="font-display text-2xl leading-none">
             Rial<span className="italic text-gold">Tycoon</span>
           </Link>
-          <SimBadge />
-          <nav className="order-last flex w-full gap-1 overflow-x-auto md:order-none md:ml-4 md:w-auto" aria-label="Game tabs">
-            {TABS.map((t) => (
+          <div role="group" aria-label="Game mode" className="flex rounded-lg border border-white/10 p-0.5 text-xs">
+            {(["live", "season"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                aria-pressed={mode === m}
+                className={`rounded-md px-2.5 py-1 ${mode === m ? "bg-gold text-black" : "text-muted hover:text-ink"}`}
+              >
+                {m === "live" ? "Live Market" : "Simulation Season"}
+              </button>
+            ))}
+          </div>
+          {mode === "season" ? <SimBadge /> : <LivePricesBadge quotes={liveData.quotes} />}
+          <nav className="order-last flex w-full gap-1 overflow-x-auto md:order-none md:ml-2 md:w-auto" aria-label="Game tabs">
+            {TABS[mode].map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -90,7 +132,13 @@ function Terminal() {
 
       <main className="mx-auto max-w-[1500px] space-y-3 px-3 py-3 md:px-5">
         <MfaNudge />
-        {ready ? (
+        {ready && mode === "live" ? (
+          <>
+            <LiveStatus data={liveData} />
+            {tab === "Markets" && <LiveDashboard data={liveData} />}
+            {tab === "Portfolio" && <LivePortfolio data={liveData} />}
+          </>
+        ) : ready ? (
           <>
             <TargetBar netWorth={netWorth} />
             {tab === "Dashboard" && <Dashboard onOpenInfo={() => setInfoOpen(true)} />}
