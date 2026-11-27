@@ -85,26 +85,81 @@ const LIVE_ICON: Record<string, AssetId> = {
   IEF: "UST10Y", VNQ: "SCBD", FXE: "EURUSD",
 };
 
-/** Assets with an official logo in /public/logos (sources in public/logos/SOURCES.json). */
+/** Assets with a bundled logo file in /public/logos (sources in public/logos/SOURCES.json). */
 const LOGO_IDS = new Set([
   "BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "TRX", "AVAX", "LINK", "DOT", "TON", "SUI", "LTC", "NEAR", "UNI", "ATOM", "APT", "PAXG", "ONDO",
   "AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA", "JPM", "V", "NFLX", "AMD", "COIN",
+  // Flags: Treasuries and the euro, and Jakarta's SCBD
+  "IEF", "UST10Y", "FXE", "EURUSD", "SCBD",
 ]);
 
 /**
- * Round asset badge: the asset's real logo when one is bundled, otherwise its glyph
- * (ETFs and the Simulation Season assets, which have no logo of their own).
+ * Commodities and indexes have no logo of their own, so they wear the identifier traders use:
+ * the element symbol for metals, the futures contract code for energy and softs, the index code for index funds.
  */
+const CODE_TILES: Record<string, { code: string; bg: string; fg: string }> = {
+  GLD: { code: "Au", bg: "#d4a84b", fg: "#241a06" },
+  GOLD: { code: "Au", bg: "#d4a84b", fg: "#241a06" },
+  SLV: { code: "Ag", bg: "#c4c9d0", fg: "#1b1e22" },
+  CPER: { code: "Cu", bg: "#b87333", fg: "#fff" },
+  COPPER: { code: "Cu", bg: "#b87333", fg: "#fff" },
+  USO: { code: "CL", bg: "#26221c", fg: "#f0c36b" },
+  OIL: { code: "CL", bg: "#26221c", fg: "#f0c36b" },
+  UNG: { code: "NG", bg: "#1d4ed8", fg: "#fff" },
+  COFFEE: { code: "KC", bg: "#6f4e37", fg: "#fff" },
+  SPY: { code: "SPX", bg: "#16325c", fg: "#fff" },
+  SPX: { code: "SPX", bg: "#16325c", fg: "#fff" },
+  QQQ: { code: "NDX", bg: "#0b7c86", fg: "#fff" },
+};
+
+/** Baskets with no single code: a glyph on a colour that names the sector. */
+const GLYPH_TILES: Record<string, { bg: string; glyph: "wheat" | "building" }> = {
+  DBA: { bg: "#4d7c2f", glyph: "wheat" },
+  VNQ: { bg: "#2f6f5e", glyph: "building" },
+};
+
+const WHEAT = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 21V8" />
+    <path d="M12 8c-2.2-.4-3.4-1.9-3.4-4 2.2.3 3.4 1.8 3.4 4zM12 8c2.2-.4 3.4-1.9 3.4-4-2.2.3-3.4 1.8-3.4 4z" />
+    <path d="M12 12.5c-2.2-.4-3.4-1.9-3.4-4 2.2.3 3.4 1.8 3.4 4zM12 12.5c2.2-.4 3.4-1.9 3.4-4-2.2.3-3.4 1.8-3.4 4z" />
+    <path d="M12 17c-2.2-.4-3.4-1.9-3.4-4 2.2.3 3.4 1.8 3.4 4zM12 17c2.2-.4 3.4-1.9 3.4-4-2.2.3-3.4 1.8-3.4 4z" />
+  </svg>
+);
+
+/** Round asset badge used everywhere an asset is listed. */
 export function AssetLogo({ id, category, size = 24, className = "" }: { id: string; category: string; size?: number; className?: string }) {
   const box = { width: size, height: size };
+  const ring = "shrink-0 rounded-full outline outline-1 -outline-offset-1 outline-white/10";
   if (LOGO_IDS.has(id)) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={`/logos/${id}.svg`} alt="" width={size} height={size} loading="lazy" decoding="async" style={box} className={`shrink-0 rounded-full outline outline-1 -outline-offset-1 outline-white/10 ${className}`} />
+      <img src={`/logos/${id}.svg`} alt="" width={size} height={size} loading="lazy" decoding="async" style={box} className={`${ring} object-cover ${className}`} />
+    );
+  }
+  const tile = CODE_TILES[id];
+  if (tile) {
+    const len = tile.code.length;
+    return (
+      <span
+        aria-hidden="true"
+        style={{ ...box, background: tile.bg, color: tile.fg, fontSize: size * (len > 2 ? 0.32 : 0.42) }}
+        className={`${ring} grid place-items-center font-semibold leading-none tracking-[-0.02em] ${className}`}
+      >
+        {tile.code}
+      </span>
+    );
+  }
+  const g = GLYPH_TILES[id];
+  if (g) {
+    return (
+      <span aria-hidden="true" style={{ ...box, background: g.bg }} className={`${ring} grid place-items-center text-white ${className}`}>
+        <span className="h-[58%] w-[58%]">{g.glyph === "wheat" ? WHEAT : <AssetIcon id="SCBD" className="h-full w-full" />}</span>
+      </span>
     );
   }
   return (
-    <span style={box} className={`grid shrink-0 place-items-center rounded-full bg-panel-2 text-muted outline outline-1 -outline-offset-1 outline-white/10 ${className}`} aria-hidden="true">
+    <span style={box} className={`${ring} grid place-items-center bg-panel-2 text-muted ${className}`} aria-hidden="true">
       {category === "season" ? <AssetIcon id={id as AssetId} className="h-[58%] w-[58%]" /> : <LiveAssetIcon id={id} category={category} className="h-[58%] w-[58%]" />}
     </span>
   );

@@ -47,11 +47,13 @@ For local development, put the same two lines in `.env.local` (never commit it).
 
 ## Asset logos
 
-The 32 crypto and stock logos in `public/logos/` are the brands' own marks, bundled as SVG (no runtime requests). `public/logos/SOURCES.json` lists the source of each file:
+The crypto, stock and flag logos in `public/logos/` are the brands' own marks, bundled as SVG (no runtime requests). `public/logos/SOURCES.json` lists the source of each file:
 
 - Crypto: [Web3 Icons](https://github.com/0xa3k5/web3icons) (MIT), and Ondo from [madenix/Crypto-logo-cdn](https://github.com/madenix/Crypto-logo-cdn) (MIT).
 - Stocks: [Simple Icons](https://github.com/simple-icons/simple-icons) (CC0), with each brand's official colour. Microsoft comes from [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0). Amazon comes from [Font Awesome Free](https://fontawesome.com/license/free) brand icons (CC BY 4.0, credited in the site footer).
-- ETFs (SPY, QQQ, GLD, SLV, USO, UNG, CPER, DBA, IEF, VNQ, FXE) keep a commodity glyph. No openly licensed logo of their issuers (SPDR, Invesco, iShares, USCF, Vanguard) was available to bundle.
+- Flags from [flag-icons](https://github.com/lipis/flag-icons) (MIT; the flags are public domain) for country and currency assets: the US flag on IEF and US 10Y Bonds, the EU flag on FXE and EUR/USD, and the Indonesian flag on SCBD Property (Jakarta).
+- Commodities and indexes have no logo of their own, so their badge shows the identifier traders use, set in the app's own type: element symbols (Au gold, Ag silver, Cu copper), futures codes (CL crude oil, NG natural gas, KC coffee) and index codes (SPX for SPY, NDX for QQQ). The DBA agriculture basket shows a wheat mark, and VNQ real estate shows a building mark.
+- The ETF issuers' own logos (SPDR, Invesco, iShares, USCF, Vanguard) are not used. They are not available under an open licence, and aggregator sites do not grant reuse rights.
 
 All logos are trademarks of their owners and are used only to identify the asset. Simple Icons asks users to read its [legal disclaimer](https://github.com/simple-icons/simple-icons/blob/develop/DISCLAIMER.md).
 
