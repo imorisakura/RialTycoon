@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Modal";
-import { AssetIcon, SourceIcon } from "@/components/ui/Icons";
+import { AssetLogo, SourceIcon } from "@/components/ui/Icons";
 import { Rolling } from "@/components/ui/Rolling";
 import { Delta, Sparkline } from "@/components/ui/Sparkline";
 import { useToast } from "@/components/ui/Toasts";
@@ -81,7 +81,7 @@ function Command({ selected }: { selected: AssetId }) {
         <div className="rounded-panel border border-line p-3">
           <div className="flex items-center justify-between">
             <p className="font-semibold">
-              <span className="inline-flex items-center gap-2"><AssetIcon id={asset.id} className="h-5 w-5 text-gold" /><span className="font-semibold tracking-tight text-2xl font-normal leading-none">{asset.name}</span></span>
+              <span className="inline-flex items-center gap-2"><AssetLogo id={asset.id} category="season" size={28} /><span className="font-semibold tracking-tight text-2xl font-normal leading-none">{asset.name}</span></span>
             </p>
             <span className="tabular text-sm">{fmt(price)}</span>
           </div>
@@ -179,7 +179,7 @@ function MarketLive({ selected, onSelect }: { selected: AssetId; onSelect: (id: 
                 >
                   <td className="py-2.5 pr-2">
                     <button className="flex items-center gap-2 text-left" onClick={() => onSelect(a.id)}>
-                      <AssetIcon id={a.id} className="h-5 w-5 shrink-0 text-gold/80" />
+                      <AssetLogo id={a.id} category="season" size={24} />
                       <span>
                         <span className="font-medium">{a.name}</span>
                         <span className="ml-1.5 font-mono text-[10px] text-muted">{a.ticker}</span>

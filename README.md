@@ -45,6 +45,16 @@ Notes:
 
 For local development, put the same two lines in `.env.local` (never commit it).
 
+## Asset logos
+
+The 32 crypto and stock logos in `public/logos/` are the brands' own marks, bundled as SVG (no runtime requests). `public/logos/SOURCES.json` lists the source of each file:
+
+- Crypto: [Web3 Icons](https://github.com/0xa3k5/web3icons) (MIT), and Ondo from [madenix/Crypto-logo-cdn](https://github.com/madenix/Crypto-logo-cdn) (MIT).
+- Stocks: [Simple Icons](https://github.com/simple-icons/simple-icons) (CC0), with each brand's official colour. Microsoft comes from [gilbarbara/logos](https://github.com/gilbarbara/logos) (CC0). Amazon comes from [Font Awesome Free](https://fontawesome.com/license/free) brand icons (CC BY 4.0, credited in the site footer).
+- ETFs (SPY, QQQ, GLD, SLV, USO, UNG, CPER, DBA, IEF, VNQ, FXE) keep a commodity glyph. No openly licensed logo of their issuers (SPDR, Invesco, iShares, USCF, Vanguard) was available to bundle.
+
+All logos are trademarks of their owners and are used only to identify the asset. Simple Icons asks users to read its [legal disclaimer](https://github.com/simple-icons/simple-icons/blob/develop/DISCLAIMER.md).
+
 ## Privy dashboard setup (for real Google sign-in)
 
 1. Create an app at the Privy dashboard and copy its **App ID** into `.env.local` as `NEXT_PUBLIC_PRIVY_APP_ID`.

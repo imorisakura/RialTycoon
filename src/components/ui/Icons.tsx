@@ -85,6 +85,31 @@ const LIVE_ICON: Record<string, AssetId> = {
   IEF: "UST10Y", VNQ: "SCBD", FXE: "EURUSD",
 };
 
+/** Assets with an official logo in /public/logos (sources in public/logos/SOURCES.json). */
+const LOGO_IDS = new Set([
+  "BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "TRX", "AVAX", "LINK", "DOT", "TON", "SUI", "LTC", "NEAR", "UNI", "ATOM", "APT", "PAXG", "ONDO",
+  "AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA", "JPM", "V", "NFLX", "AMD", "COIN",
+]);
+
+/**
+ * Round asset badge: the asset's real logo when one is bundled, otherwise its glyph
+ * (ETFs and the Simulation Season assets, which have no logo of their own).
+ */
+export function AssetLogo({ id, category, size = 24, className = "" }: { id: string; category: string; size?: number; className?: string }) {
+  const box = { width: size, height: size };
+  if (LOGO_IDS.has(id)) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={`/logos/${id}.svg`} alt="" width={size} height={size} loading="lazy" decoding="async" style={box} className={`shrink-0 rounded-full outline outline-1 -outline-offset-1 outline-white/10 ${className}`} />
+    );
+  }
+  return (
+    <span style={box} className={`grid shrink-0 place-items-center rounded-full bg-panel-2 text-muted outline outline-1 -outline-offset-1 outline-white/10 ${className}`} aria-hidden="true">
+      {category === "season" ? <AssetIcon id={id as AssetId} className="h-[58%] w-[58%]" /> : <LiveAssetIcon id={id} category={category} className="h-[58%] w-[58%]" />}
+    </span>
+  );
+}
+
 /** Icon for a Live Market asset (crypto coin, stock chart, or the matching commodity/income glyph). */
 export function LiveAssetIcon({ id, category, className }: P & { id: string; category: string }) {
   if (category === "crypto") return <CryptoIcon className={className} />;

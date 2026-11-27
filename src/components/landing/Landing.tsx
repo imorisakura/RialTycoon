@@ -4,7 +4,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GoogleButton } from "@/components/ui/GoogleButton";
-import { LiveAssetIcon } from "@/components/ui/Icons";
+import { AssetLogo } from "@/components/ui/Icons";
 import { Change, Rolling, usd } from "@/components/ui/Rolling";
 import { useSharedMarket } from "@/lib/market/LiveMarketContext";
 import { CATEGORY_LABEL, LIVE_ASSETS, LIVE_BY_ID, type LiveCategory, type LiveQuote, type QuoteSource } from "@/lib/market/universe";
@@ -191,7 +191,7 @@ export function Landing() {
             <a href="https://www.coingecko.com" className="tx underline underline-offset-2 hover:text-ink" target="_blank" rel="noopener noreferrer">
               CoinGecko
             </a>
-            . Balances are play money. Not financial advice.
+            . Logos are trademarks of their owners; Amazon icon by Font Awesome (CC BY 4.0). Balances are play money. Not financial advice.
           </p>
         </div>
       </footer>
@@ -220,6 +220,7 @@ function Tape({ quotes }: { quotes: Record<string, LiveQuote> }) {
           const q = quotes[a.id];
           return (
             <span key={i} className="flex h-11 items-center gap-2.5 border-r border-line px-5 text-sm" aria-hidden={i >= items.length}>
+              <AssetLogo id={a.id} category={a.category} size={18} />
               <span className="font-mono text-xs text-muted">{a.ticker}</span>
               <span className="tabular font-medium">{usd(q.price)}</span>
               <Change value={q.change} className="text-xs" />
@@ -255,7 +256,7 @@ function Board({ quotes, stream }: { quotes: Record<string, LiveQuote>; stream: 
           return (
             <li key={id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-line px-5 py-3.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto_96px]">
               <div className="flex min-w-0 items-center gap-3">
-                <LiveAssetIcon id={id} category={a.category} className="h-5 w-5 shrink-0 text-muted" />
+                <AssetLogo id={id} category={a.category} size={32} />
                 <div className="min-w-0">
                   <p className="truncate font-medium">{a.category === "commodity" ? `${a.name} (${a.ticker})` : a.name}</p>
                   <p className="text-xs text-faint">
@@ -324,7 +325,7 @@ function Markets({ quotes }: { quotes: Record<string, LiveQuote> }) {
                   <tr key={a.id} className="border-b border-line">
                     <td className="py-3.5 pr-4">
                       <span className="flex items-center gap-3">
-                        <LiveAssetIcon id={a.id} category={a.category} className="h-5 w-5 shrink-0 text-muted" />
+                        <AssetLogo id={a.id} category={a.category} size={28} />
                         <span className="font-medium">{a.name}</span>
                         <span className="font-mono text-xs text-faint">{a.ticker}</span>
                       </span>

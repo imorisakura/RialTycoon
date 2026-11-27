@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Rolling } from "@/components/ui/Rolling";
 import { useMemo, useState } from "react";
-import { LiveAssetIcon } from "@/components/ui/Icons";
+import { AssetLogo } from "@/components/ui/Icons";
 import { Badge } from "@/components/ui/Modal";
 import { Delta } from "@/components/ui/Sparkline";
 import { useToast } from "@/components/ui/Toasts";
@@ -160,7 +160,7 @@ function LiveCommand({ data, selected }: { data: LiveData; selected: string }) {
         <div className="rounded-panel border border-line p-3">
           <div className="flex items-start justify-between gap-2">
             <span className="flex items-center gap-2">
-              <LiveAssetIcon id={asset.id} category={asset.category} className="h-5 w-5 text-gold" />
+              <AssetLogo id={asset.id} category={asset.category} size={28} />
               <span className="font-semibold tracking-tight text-2xl leading-none">{asset.name}</span>
             </span>
             <span className="text-right">
@@ -278,7 +278,7 @@ function LiveMarketTable({ data, selected, onSelect }: { data: LiveData; selecte
                 >
                   <td className="py-2.5 pr-2">
                     <button className="flex items-center gap-2.5 text-left" onClick={() => onSelect(a.id)}>
-                      <LiveAssetIcon id={a.id} category={a.category} className="h-5 w-5 shrink-0 text-gold/80" />
+                      <AssetLogo id={a.id} category={a.category} size={24} />
                       <span>
                         <span className="font-medium">{a.name}</span>
                         <span className="ml-1.5 font-mono text-[10px] text-muted">{a.ticker}</span>
@@ -388,7 +388,7 @@ export function LivePortfolio({ data }: { data: LiveData }) {
                   <tr key={id} className="border-t border-line">
                     <td className="py-2.5">
                       <span className="flex items-center gap-2">
-                        <LiveAssetIcon id={id} category={a.category} className="h-4 w-4 text-gold" />
+                        <AssetLogo id={id} category={a.category} size={20} />
                         {a.name} <Badge tone="up">Owned</Badge>
                       </span>
                     </td>

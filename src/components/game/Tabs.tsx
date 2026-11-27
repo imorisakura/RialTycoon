@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Modal";
-import { AssetIcon, VaultIcon } from "@/components/ui/Icons";
+import { AssetLogo, VaultIcon } from "@/components/ui/Icons";
 import { useToast } from "@/components/ui/Toasts";
 import { useAuth } from "@/lib/auth/context";
 import { ASSET_BY_ID, ASSET_CLASSES, RARE_ITEM, STARTING_GRANT, type AssetId } from "@/lib/game/data";
@@ -39,7 +39,7 @@ export function PortfolioTab() {
                 <div key={id} className="rounded-panel border border-line bg-panel-2 p-4">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">
-                      <span className="inline-flex items-center gap-2"><AssetIcon id={a.id} className="h-5 w-5 text-gold" /><span className="font-semibold tracking-tight text-2xl font-normal leading-none">{a.name}</span></span>
+                      <span className="inline-flex items-center gap-2"><AssetLogo id={a.id} category="season" size={28} /><span className="font-semibold tracking-tight text-2xl font-normal leading-none">{a.name}</span></span>
                     </span>
                     <Badge tone="up">Owned</Badge>
                   </div>
