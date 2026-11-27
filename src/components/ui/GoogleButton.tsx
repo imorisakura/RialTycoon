@@ -19,13 +19,13 @@ export function GoogleG({ className = "h-5 w-5" }: { className?: string }) {
 
 export function GoogleButton({ size = "md", className = "" }: { size?: "sm" | "md" | "lg"; className?: string }) {
   const { ready, authenticated, login } = useAuth();
-  const pad = size === "lg" ? "px-6 py-3.5 text-base" : size === "sm" ? "px-3.5 py-2 text-sm" : "px-5 py-3 text-sm";
-  const base = `inline-flex items-center justify-center gap-3 whitespace-nowrap rounded-full font-semibold transition ${pad} ${className}`;
+  const pad = size === "lg" ? "h-12 px-5 text-[15px]" : size === "sm" ? "h-9 px-3.5 text-sm" : "h-11 px-4 text-sm";
+  const base = `tx inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-[var(--radius-control)] font-medium active:scale-[0.98] ${pad} ${className}`;
 
   if (ready && authenticated) {
     return (
       <Link href="/play" className={`${base} bg-gold text-black hover:bg-gold-bright`}>
-        Enter the game →
+        Enter the game
       </Link>
     );
   }
@@ -34,7 +34,7 @@ export function GoogleButton({ size = "md", className = "" }: { size?: "sm" | "m
       type="button"
       onClick={login}
       disabled={!ready}
-      className={`${base} bg-white text-[#1f1f1f] shadow-lg shadow-black/30 hover:bg-[#f2f2f2] disabled:opacity-70`}
+      className={`${base} bg-white text-[#1f1f1f] hover:bg-[#e8eaed] disabled:opacity-70`}
     >
       <GoogleG />
       Sign in with Google

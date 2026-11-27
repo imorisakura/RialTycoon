@@ -17,7 +17,9 @@ export function useLiveMarket(enabled = true) {
   const [ticks, setTicks] = useState<Record<string, LiveQuote>>({});
   const [stream, setStream] = useState<StreamState>("connecting");
   const [error, setError] = useState<string | null>(null);
+  const [tickCount, setTickCount] = useState(0);
   const pending = useRef<Record<string, LiveQuote>>({});
+  const pendingTicks = useRef(0);
 
   // Server snapshot
   useEffect(() => {
@@ -58,7 +60,10 @@ export function useLiveMarket(enabled = true) {
       const batch = pending.current;
       if (!Object.keys(batch).length) return;
       pending.current = {};
+      const n = pendingTicks.current;
+      pendingTicks.current = 0;
       setTicks((t) => ({ ...t, ...batch }));
+      setTickCount((c) => c + n);
     }, 1000);
 
     const connect = () => {
@@ -82,6 +87,7 @@ export function useLiveMarket(enabled = true) {
           const open = Number(m.open_24h);
           if (!id || !Number.isFinite(price)) return;
           setStream("live");
+          pendingTicks.current += 1;
           pending.current[id] = {
             id,
             price,
@@ -114,7 +120,7 @@ export function useLiveMarket(enabled = true) {
     // A Coinbase tick wins over an older snapshot or a SIM fallback.
     if (!base || base.source === "sim" || t.asOf >= base.asOf) quotes[id] = t;
   }
-  return { market, quotes, stream, error };
+  return { market, quotes, stream, error, tickCount };
 }
 
 export function useMarketNews(enabled = true) {

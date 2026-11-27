@@ -18,11 +18,12 @@ export interface LayerLabel {
   detail: string;
 }
 
+/** Live Market categories, one per exploded layer (see Opening for the live quote under each). */
 export const LAYER_LABELS: LayerLabel[] = [
-  { key: "rim", title: "Metals", detail: "Gold · Copper" },
-  { key: "gear", title: "Energy & Agriculture", detail: "Oil · Coffee" },
-  { key: "dial", title: "Financial Markets", detail: "S&P 500 · EUR/USD" },
-  { key: "train", title: "Income", detail: "US 10Y Bonds · SCBD Property" },
+  { key: "rim", title: "Commodities", detail: "Gold, silver, oil, gas, copper, agriculture" },
+  { key: "gear", title: "Crypto", detail: "Bitcoin, Ether, Solana and 17 more" },
+  { key: "dial", title: "US stocks", detail: "Nvidia, Apple, Microsoft and 11 more" },
+  { key: "train", title: "Income & FX", detail: "Treasuries, real estate, euro" },
 ];
 
 function gearShape(outer: number, inner: number, teeth: number, hole: number, spokes = 0, spokeHole = 0) {
@@ -111,9 +112,9 @@ function faceTexture(fontFamily: string) {
     g.restore();
   });
   // monogram
-  g.font = `400 520px "Instrument Serif", Georgia, serif`;
+  g.font = `600 500px ${getComputedStyle(document.body).fontFamily}`;
   g.fillStyle = "#ffffff";
-  g.fillText("R", 0, 30);
+  g.fillText("R", 0, 24);
   const t = new THREE.CanvasTexture(c);
   t.anisotropy = 8;
   return t;
@@ -382,7 +383,7 @@ export class VaultScene {
     this.mech.rotation.z = turn * (portrait ? 0 : 0.08);
     const scale = portrait ? 0.82 : 1;
     this.mech.scale.setScalar(scale * lerp(1, 1.15, dive) * lerp(1, portrait ? 0.5 : 0.74, turn) * lerp(1, portrait ? 0.62 : 1, final));
-    this.mech.position.x = portrait ? 0.12 * turn : lerp(0, 1.25, final) + 0.75 * turn;
+    this.mech.position.x = portrait ? 0.12 * turn : (1 - final) * (0.95 * (1 - turn) + 0.75 * turn) + 1.25 * final;
     this.mech.position.y = portrait ? lerp(0.35, 1.45, final) - 1.05 * turn : -0.18 * turn;
 
     // Moving parts

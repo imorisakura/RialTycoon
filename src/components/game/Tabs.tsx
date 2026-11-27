@@ -19,7 +19,7 @@ export function PortfolioTab() {
   const entries = Object.entries(s.holdings) as [AssetId, { qty: number; cost: number }][];
 
   const withdraw = async () => {
-    if (!(await gate.require("withdraw"))) return toast("Withdraw cancelled — 2FA not completed.", "error");
+    if (!(await gate.require("withdraw"))) return toast("Withdraw cancelled. 2FA was not completed.", "error");
     toast("2FA passed. Withdrawals are disabled until the Rialo devnet is verified (simulation).", "info");
   };
 
@@ -36,10 +36,10 @@ export function PortfolioTab() {
               const pnl = value - h.cost;
               const cls = ASSET_CLASSES[a.classId];
               return (
-                <div key={id} className="rounded-2xl border border-line bg-panel-2 p-4">
+                <div key={id} className="rounded-panel border border-line bg-panel-2 p-4">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">
-                      <span className="inline-flex items-center gap-2"><AssetIcon id={a.id} className="h-5 w-5 text-gold" /><span className="font-display text-2xl font-normal leading-none">{a.name}</span></span>
+                      <span className="inline-flex items-center gap-2"><AssetIcon id={a.id} className="h-5 w-5 text-gold" /><span className="font-semibold tracking-tight text-2xl font-normal leading-none">{a.name}</span></span>
                     </span>
                     <Badge tone="up">Owned</Badge>
                   </div>
@@ -59,7 +59,7 @@ export function PortfolioTab() {
                     <dd className="tabular text-right">{(cls.yieldPerCycle * 100).toFixed(1)}%</dd>
                   </dl>
                   <p className="mt-2 text-[11px] text-muted">
-                    {cls.name} · {cls.risk} risk
+                    {cls.name}, {cls.risk.toLowerCase()} risk
                   </p>
                 </div>
               );
@@ -77,14 +77,14 @@ export function PortfolioTab() {
               Bid escrow <span className="tabular float-right">{fmt(s.auction.myBid)} $RIALO</span>
             </p>
             <p className="font-mono text-xs text-muted break-all">{s.address}</p>
-            <button onClick={withdraw} className="w-full rounded-xl border border-line py-2.5 hover:border-gold">
+            <button onClick={withdraw} className="w-full rounded-control border border-line py-2.5 hover:border-gold">
               Withdraw (2FA)
             </button>
           </div>
         </Panel>
         <Panel title="Items">
           {s.items.includes(RARE_ITEM.id) ? (
-            <div className="rounded-xl border border-gold/40 bg-gold/10 p-3 text-sm">
+            <div className="rounded-panel border border-gold/40 bg-gold/10 p-3 text-sm">
               <p className="font-semibold text-gold">{RARE_ITEM.name}</p>
               <p className="text-xs text-muted">{RARE_ITEM.description}</p>
             </div>
@@ -126,7 +126,7 @@ export function AuctionTab() {
   useEffect(() => setAmount((a) => Math.max(a, minBid)), [minBid]);
 
   const bid = async () => {
-    if (!(await gate.require("auction-bid"))) return toast("Bid cancelled — 2FA not completed.", "error");
+    if (!(await gate.require("auction-bid"))) return toast("Bid cancelled. 2FA was not completed.", "error");
     const r = placeBid(amount);
     toast(r.message, r.ok ? "ok" : "error");
   };
@@ -136,17 +136,17 @@ export function AuctionTab() {
 
   return (
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <Panel title={`Auction · round ${auction.round}`} right={<SimBadge />}>
+      <Panel title={`Auction, round ${auction.round}`} right={<SimBadge />}>
         <div className="grid gap-6 md:grid-cols-[220px_1fr]">
-          <div className="grid aspect-square place-items-center rounded-2xl border border-gold/40 bg-gradient-to-br from-gold/30 via-panel-2 to-panel-2 text-7xl"><VaultIcon className="h-28 w-28 text-gold" /></div>
+          <div className="grid aspect-square place-items-center rounded-panel border border-gold/40 bg-gradient-to-br from-gold/30 via-panel-2 to-panel-2 text-7xl"><VaultIcon className="h-28 w-28 text-gold" /></div>
           <div>
-            <Badge>Rare · cosmetic + small buff</Badge>
-            <h3 className="mt-3 font-display text-4xl leading-none">{RARE_ITEM.name}</h3>
+            <Badge>Rare item: cosmetic plus a small buff</Badge>
+            <h3 className="mt-3 font-semibold tracking-tight text-4xl leading-none">{RARE_ITEM.name}</h3>
             <p className="mt-1 text-sm text-muted">{RARE_ITEM.description}</p>
             <div className="mt-5 flex items-end gap-6">
               <div>
                 <p className="text-xs text-muted">Ends in</p>
-                <p className={`tabular font-mono text-4xl font-bold ${left < 30000 ? "text-down" : "text-gold"}`} aria-live="off">
+                <p className={`tabular text-5xl font-semibold tracking-tight ${left < 30000 ? "text-down" : "text-gold"}`} aria-live="off">
                   {mm}:{ss}
                 </p>
               </div>
@@ -156,7 +156,7 @@ export function AuctionTab() {
               </div>
               <div>
                 <p className="text-xs text-muted">Your bid</p>
-                <p className="tabular text-2xl font-semibold">{auction.myBid ? fmt(auction.myBid, 0) : "—"}</p>
+                <p className="tabular text-2xl font-semibold">{auction.myBid ? fmt(auction.myBid, 0) : "None"}</p>
               </div>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
@@ -167,14 +167,14 @@ export function AuctionTab() {
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
                 aria-label="Bid amount"
-                className="tabular w-40 rounded-xl border border-line bg-black/30 px-3 py-2.5 outline-none focus:border-gold"
+                className="tabular w-40 rounded-control border border-line bg-black/30 px-3 py-2.5 outline-none focus:border-gold"
               />
-              <button onClick={bid} disabled={left === 0} className="rounded-xl bg-gold px-6 py-2.5 font-semibold text-black disabled:opacity-50">
+              <button onClick={bid} disabled={left === 0} className="rounded-control bg-gold px-6 py-2.5 font-semibold text-black disabled:opacity-50">
                 {auction.myBid ? "Raise bid (2FA)" : "Bid (2FA)"}
               </button>
             </div>
             <p className="mt-2 text-xs text-muted">
-              Minimum {fmt(minBid, 0)} $RIALO · your bid is escrowed from cash ({fmt(cash)} available) and refunded if you lose.
+              Minimum {fmt(minBid, 0)} $RIALO. Your bid is escrowed from cash ({fmt(cash)} available) and refunded if you lose.
             </p>
           </div>
         </div>
@@ -216,10 +216,10 @@ export function LeaderboardTab() {
     .sort((a, b) => b.roc - a.roc);
 
   return (
-    <section className="rounded-2xl border border-line bg-panel">
+    <section className="rounded-panel border border-line bg-panel">
       <header className="flex flex-wrap items-end justify-between gap-2 border-b border-line px-5 py-4">
         <div>
-          <h2 className="font-display text-4xl leading-none">Season leaderboard</h2>
+          <h2 className="font-semibold tracking-tight text-4xl leading-none">Season leaderboard</h2>
           <p className="text-sm text-muted">Season 1 leaderboard · return on capital</p>
         </div>
         <SimBadge />
@@ -227,7 +227,7 @@ export function LeaderboardTab() {
       <ol>
         {rows.map((r, i) => (
           <li key={r.name} className={`grid grid-cols-[40px_1fr_auto_auto] items-center gap-4 border-b border-line px-5 py-3 last:border-0 ${r.you ? "bg-gold/10" : ""}`}>
-            <span className={`font-mono ${i === 0 ? "text-gold" : "text-muted"}`}>#{i + 1}</span>
+            <span className={`tabular font-medium ${i === 0 ? "text-gold" : "text-muted"}`}>{i + 1}</span>
             <span className={r.you ? "font-semibold text-gold" : ""}>{r.name}</span>
             <span className="tabular text-sm text-muted">{fmt(r.netWorth)} $RIALO</span>
             <span className={`tabular w-20 text-right font-semibold ${r.roc >= 0 ? "text-up" : "text-down"}`}>

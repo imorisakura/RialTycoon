@@ -1,39 +1,15 @@
 "use client";
 
-import { animate } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { Rolling } from "@/components/ui/Rolling";
 import { Badge, Modal } from "@/components/ui/Modal";
 import { RIALO_MAPPING } from "@/components/landing/Landing";
 import { fmt } from "@/lib/game/store";
 import { NET_WORTH_TARGET, TIERS } from "@/lib/game/data";
 import { rialo } from "@/lib/rialo/adapter";
 
-/** Balance animation: counts smoothly to the new value and flashes on change. */
+/** Balances roll digit by digit like the quote board (DESIGN.md). */
 export function AnimatedNumber({ value, decimals = 2, className = "" }: { value: number; decimals?: number; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const prev = useRef(value);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const from = prev.current;
-    prev.current = value;
-    if (from === value) {
-      el.textContent = fmt(value, decimals);
-      return;
-    }
-    el.style.color = value > from ? "var(--color-up)" : "var(--color-down)";
-    const controls = animate(from, value, {
-      duration: 0.6,
-      onUpdate: (v) => (el.textContent = fmt(v, decimals)),
-      onComplete: () => (el.style.color = ""),
-    });
-    return () => controls.stop();
-  }, [value, decimals]);
-  return (
-    <span ref={ref} className={`tabular transition-colors ${className}`}>
-      {fmt(value, decimals)}
-    </span>
-  );
+  return <Rolling value={value} format={(n) => fmt(n, decimals)} className={className} />;
 }
 
 export function SimBadge() {
@@ -42,9 +18,9 @@ export function SimBadge() {
 
 export function Panel({ title, right, children, className = "" }: { title: string; right?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`flex min-h-0 flex-col rounded-xl border border-white/[0.07] bg-panel shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${className}`}>
-      <header className="flex items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-3">
-        <h2 className="eyebrow text-muted">{title}</h2>
+    <section className={`flex min-h-0 flex-col rounded-panel border border-line bg-panel ${className}`}>
+      <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+        <h2 className="text-sm font-medium text-muted">{title}</h2>
         {right}
       </header>
       <div className="min-h-0 flex-1 p-4">{children}</div>
@@ -66,7 +42,7 @@ export function TargetBar({ netWorth }: { netWorth: number }) {
   const { tier, next, pct } = tierFor(netWorth);
   const toTarget = Math.min(1, netWorth / NET_WORTH_TARGET);
   return (
-    <div className="grid gap-3 rounded-2xl border border-line bg-panel px-4 py-3 md:grid-cols-2 md:gap-6">
+    <div className="grid gap-3 rounded-panel border border-line bg-panel px-4 py-3 md:grid-cols-2 md:gap-6">
       <div>
         <div className="flex justify-between text-xs text-muted">
           <span>
@@ -75,7 +51,7 @@ export function TargetBar({ netWorth }: { netWorth: number }) {
           <span className="tabular">{(toTarget * 100).toFixed(1)}%</span>
         </div>
         <div className="mt-1.5 h-2 rounded-full bg-white/10">
-          <div className="h-full rounded-full bg-gradient-to-r from-gold-deep to-gold-bright transition-all duration-700" style={{ width: `${toTarget * 100}%` }} />
+          <div className="h-full rounded-full bg-gold transition-[width] duration-[600ms] ease-[var(--ease-board)]" style={{ width: `${toTarget * 100}%` }} />
         </div>
       </div>
       <div>
@@ -98,15 +74,15 @@ export function TargetBar({ netWorth }: { netWorth: number }) {
 
 export function RialoInfoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
-    <Modal open={open} onClose={onClose} title="Why Rialo · how this would run on-chain">
+    <Modal open={open} onClose={onClose} title="How this would run on Rialo">
       <div className="space-y-3 text-sm">
         <p className="text-muted">
-          Adapter mode: <span className="font-mono text-gold">{rialo.mode}</span> · {rialo.networkLabel}. Every price and balance is a
+          Adapter: <span className="text-gold">{rialo.mode}</span> ({rialo.networkLabel}). Every Simulation Season price and every balance is a
           local simulation until the Rialo devnet is verified live.
         </p>
         <ul className="space-y-2">
           {RIALO_MAPPING.map((m) => (
-            <li key={m.mechanic} className="rounded-xl border border-line p-3">
+            <li key={m.mechanic} className="rounded-panel border border-line p-3">
               <p>
                 <span className="font-semibold">{m.mechanic}</span> <span className="text-gold">→ {m.feature}</span>
               </p>

@@ -71,7 +71,7 @@ export function MfaGateProvider({ children }: { children: ReactNode }) {
   return (
     <GateContext.Provider value={{ require: requireMfa, verifiedUntil }}>
       {children}
-      <Modal open={!!pending} onClose={() => finish(false)} title={pending ? `2FA required · ${ACTION_COPY[pending].title}` : ""}>
+      <Modal open={!!pending} onClose={() => finish(false)} title={pending ? `2FA required: ${ACTION_COPY[pending].title.toLowerCase()}` : ""}>
         {pending && (
           <div className="space-y-4 text-sm text-muted">
             <p>{ACTION_COPY[pending].why} RialTycoon asks for a second factor only for sensitive actions, never for routine small trades.</p>
@@ -91,11 +91,11 @@ export function MfaGateProvider({ children }: { children: ReactNode }) {
               <button
                 disabled={busy}
                 onClick={run}
-                className="flex-1 rounded-xl bg-gold px-4 py-2.5 font-semibold text-black disabled:opacity-60"
+                className="flex-1 rounded-control bg-gold px-4 py-2.5 font-semibold text-black disabled:opacity-60"
               >
                 {busy ? "Waiting…" : enrolled ? "Verify now" : "Set up 2FA and verify"}
               </button>
-              <button onClick={() => finish(false)} className="rounded-xl border border-line px-4 py-2.5 text-ink">
+              <button onClick={() => finish(false)} className="rounded-control border border-line px-4 py-2.5 text-ink">
                 Cancel
               </button>
             </div>

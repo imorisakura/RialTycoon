@@ -95,7 +95,7 @@ export function SimAuthProvider({ children }: { children: ReactNode }) {
 
       <Modal open={signInOpen} onClose={() => setSignInOpen(false)} title="Simulated sign-in">
         <div className="space-y-4 text-sm text-muted">
-          <Badge tone="warn">UI review only · no Google OAuth</Badge>
+          <Badge tone="warn">UI review only, no Google OAuth</Badge>
           <p>
             No Privy app ID is configured, so this is a <strong className="text-ink">simulated sign-in</strong>. Nothing is
             sent to Google and no real account or wallet is created.
@@ -104,7 +104,7 @@ export function SimAuthProvider({ children }: { children: ReactNode }) {
             Set <code className="text-gold">NEXT_PUBLIC_PRIVY_APP_ID</code> in <code>.env.local</code> to switch to the real
             Google sign-in through Privy.
           </p>
-          <button onClick={completeSignIn} className="w-full rounded-xl bg-gold px-4 py-3 font-semibold text-black hover:bg-gold-bright">
+          <button onClick={completeSignIn} className="w-full rounded-control bg-gold px-4 py-3 font-semibold text-black hover:bg-gold-bright">
             Continue as Demo Player (simulated)
           </button>
         </div>
@@ -148,17 +148,17 @@ function SimEnrollModal({
   onRemove: (m: MfaMethod) => void;
 }) {
   const row = (m: MfaMethod, label: string, hint: string) => (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-line p-3">
+    <div className="flex items-center justify-between gap-3 rounded-panel border border-line p-3">
       <div>
         <p className="font-medium text-ink">{label}</p>
         <p className="text-xs text-muted">{hint}</p>
       </div>
       {enrolled.includes(m) ? (
-        <button onClick={() => onRemove(m)} className="rounded-lg border border-line px-3 py-1.5 text-xs text-muted hover:text-ink">
+        <button onClick={() => onRemove(m)} className="rounded-control border border-line px-3 py-1.5 text-xs text-muted hover:text-ink">
           Remove
         </button>
       ) : (
-        <button onClick={() => onEnroll(m)} className="rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-black">
+        <button onClick={() => onEnroll(m)} className="rounded-control bg-gold px-3 py-1.5 text-xs font-semibold text-black">
           Enroll
         </button>
       )}
@@ -171,7 +171,7 @@ function SimEnrollModal({
         {row("passkey", "Passkey (recommended)", "Face ID, Touch ID, Windows Hello or a security key")}
         {row("totp", "Authenticator app (TOTP)", "Fallback: 6-digit codes from an authenticator app")}
         <p className="text-xs text-muted">SMS is disabled for RialTycoon because of SIM-swap risk.</p>
-        <button onClick={onClose} className="w-full rounded-xl border border-line px-4 py-2.5 text-ink hover:border-gold/50">
+        <button onClick={onClose} className="w-full rounded-control border border-line px-4 py-2.5 text-ink hover:border-gold/50">
           Done
         </button>
       </div>
@@ -223,7 +223,7 @@ function SimVerifyModal({ open, enrolled, onDone }: { open: boolean; enrolled: M
               <button
                 key={m}
                 onClick={() => setMethod(m)}
-                className={`rounded-lg border px-3 py-1.5 text-xs ${method === m ? "border-gold text-gold" : "border-line"}`}
+                className={`rounded-control border px-3 py-1.5 text-xs ${method === m ? "border-gold text-gold" : "border-line"}`}
               >
                 {m === "passkey" ? "Passkey" : "Authenticator app"}
               </button>
@@ -231,19 +231,19 @@ function SimVerifyModal({ open, enrolled, onDone }: { open: boolean; enrolled: M
           </div>
         )}
         {method === "passkey" ? (
-          <button onClick={() => onDone(true)} className="w-full rounded-xl bg-gold px-4 py-3 font-semibold text-black">
+          <button onClick={() => onDone(true)} className="w-full rounded-control bg-gold px-4 py-3 font-semibold text-black">
             Use passkey (simulated)
           </button>
         ) : !challenge ? (
-          <button onClick={startTotp} className="w-full rounded-xl bg-gold px-4 py-3 font-semibold text-black">
+          <button onClick={startTotp} className="w-full rounded-control bg-gold px-4 py-3 font-semibold text-black">
             Send me a code
           </button>
         ) : (
           <div className="space-y-3">
-            <div className="rounded-xl border border-dashed border-gold/40 p-3 text-center">
-              <p className="text-[10px] uppercase tracking-wider">Simulated authenticator app</p>
+            <div className="rounded-panel border border-dashed border-gold/40 p-3 text-center">
+              <p className="text-xs">Simulated authenticator app</p>
               <p className="font-mono text-2xl tracking-[0.3em] text-gold">{challenge.code}</p>
-              <p className="text-[10px]">Valid for 5 minutes · max 4 wrong attempts</p>
+              <p className="text-[10px]">Valid for 5 minutes, 4 wrong attempts at most</p>
             </div>
             <input
               value={input}
@@ -252,13 +252,13 @@ function SimVerifyModal({ open, enrolled, onDone }: { open: boolean; enrolled: M
               maxLength={6}
               placeholder="6-digit code"
               aria-label="6-digit code"
-              className="w-full rounded-xl border border-line bg-black/30 px-3 py-2.5 font-mono text-ink outline-none focus:border-gold"
+              className="w-full rounded-control border border-line bg-black/30 px-3 py-2.5 font-mono text-ink outline-none focus:border-gold"
             />
             <div className="flex gap-2">
-              <button onClick={submitTotp} className="flex-1 rounded-xl bg-gold px-4 py-2.5 font-semibold text-black">
+              <button onClick={submitTotp} className="flex-1 rounded-control bg-gold px-4 py-2.5 font-semibold text-black">
                 Verify
               </button>
-              <button onClick={startTotp} className="rounded-xl border border-line px-3 py-2.5">
+              <button onClick={startTotp} className="rounded-control border border-line px-3 py-2.5">
                 New code
               </button>
             </div>

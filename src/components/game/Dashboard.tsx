@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Modal";
 import { AssetIcon, SourceIcon } from "@/components/ui/Icons";
+import { Rolling } from "@/components/ui/Rolling";
 import { Delta, Sparkline } from "@/components/ui/Sparkline";
 import { useToast } from "@/components/ui/Toasts";
 import { ASSETS, ASSET_BY_ID, ASSET_CLASSES, type AssetId } from "@/lib/game/data";
@@ -43,7 +44,7 @@ function Command({ selected }: { selected: AssetId }) {
     toast(r.message, r.ok ? "ok" : "error");
   };
   const doSell = async () => {
-    if (sellGated && !(await gate.require("large-sell"))) return toast("Large sell cancelled — 2FA not completed.", "error");
+    if (sellGated && !(await gate.require("large-sell"))) return toast("Large sell cancelled. 2FA was not completed.", "error");
     const r = useGame.getState().sell(selected, qty);
     toast(r.message, r.ok ? "ok" : "error");
   };
@@ -59,15 +60,15 @@ function Command({ selected }: { selected: AssetId }) {
       <div className="flex h-full flex-col gap-4">
         <div>
           <p className="text-xs text-muted">Net worth</p>
-          <p className="font-display text-5xl leading-none">
-            <AnimatedNumber value={netWorth} /> <span className="text-sm font-normal text-muted">$RIALO</span>
+          <p className="whitespace-nowrap text-[40px] font-semibold leading-none tracking-[-0.03em]">
+            <AnimatedNumber value={netWorth} /> <span className="text-sm font-normal tracking-normal text-muted">$RIALO</span>
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <div className="rounded-xl bg-white/5 p-2.5">
+            <div className="rounded-panel bg-panel-2 p-2.5">
               <p className="text-[11px] text-muted">Cash</p>
               <AnimatedNumber value={s.cash} className="font-semibold" />
             </div>
-            <div className="rounded-xl bg-white/5 p-2.5">
+            <div className="rounded-panel bg-panel-2 p-2.5">
               <p className="text-[11px] text-muted">Today&apos;s P&amp;L (this cycle)</p>
               <span className={`tabular font-semibold ${pnl >= 0 ? "text-up" : "text-down"}`}>
                 {pnl >= 0 ? "+" : ""}
@@ -77,15 +78,15 @@ function Command({ selected }: { selected: AssetId }) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-line p-3">
+        <div className="rounded-panel border border-line p-3">
           <div className="flex items-center justify-between">
             <p className="font-semibold">
-              <span className="inline-flex items-center gap-2"><AssetIcon id={asset.id} className="h-5 w-5 text-gold" /><span className="font-display text-2xl font-normal leading-none">{asset.name}</span></span>
+              <span className="inline-flex items-center gap-2"><AssetIcon id={asset.id} className="h-5 w-5 text-gold" /><span className="font-semibold tracking-tight text-2xl font-normal leading-none">{asset.name}</span></span>
             </p>
             <span className="tabular text-sm">{fmt(price)}</span>
           </div>
           <p className="text-xs text-muted">
-            Holding {held} · {ASSET_CLASSES[asset.classId].name}
+            {ASSET_CLASSES[asset.classId].name}. You hold {held}.
           </p>
           <label className="mt-3 block text-xs text-muted" htmlFor="qty">
             Quantity
@@ -97,23 +98,23 @@ function Command({ selected }: { selected: AssetId }) {
               min={1}
               value={qty}
               onChange={(e) => setQty(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
-              className="tabular w-full rounded-lg border border-line bg-black/30 px-2.5 py-1.5 outline-none focus:border-gold"
+              className="tabular w-full rounded-control border border-line bg-black/30 px-2.5 py-1.5 outline-none focus:border-gold"
             />
             {[1, 5, 10].map((n) => (
-              <button key={n} onClick={() => setQty(n)} className={`rounded-lg border px-2.5 text-xs ${qty === n ? "border-gold text-gold" : "border-line text-muted"}`}>
+              <button key={n} onClick={() => setQty(n)} className={`rounded-control border px-2.5 text-xs ${qty === n ? "border-gold text-gold" : "border-line text-muted"}`}>
                 {n}
               </button>
             ))}
           </div>
           <p className="mt-2 text-xs text-muted">
             Order value <span className="tabular text-ink">{fmt(value)}</span> $RIALO
-            {sellGated && held > 0 && <span className="text-amber-300"> · selling needs 2FA</span>}
+            {sellGated && held > 0 && <span className="text-gold">. Selling this needs 2FA.</span>}
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <motion.button whileTap={{ scale: 0.96 }} onClick={doBuy} className="rounded-xl bg-up py-2.5 font-semibold text-black">
+            <motion.button whileTap={{ scale: 0.96 }} onClick={doBuy} className="rounded-control bg-up py-2.5 font-semibold text-black">
               Buy
             </motion.button>
-            <motion.button whileTap={{ scale: 0.96 }} onClick={doSell} disabled={held === 0} className="rounded-xl bg-down py-2.5 font-semibold text-white disabled:opacity-40">
+            <motion.button whileTap={{ scale: 0.96 }} onClick={doSell} disabled={held === 0} className="rounded-control bg-down py-2.5 font-semibold text-white disabled:opacity-40">
               Sell
             </motion.button>
           </div>
@@ -124,9 +125,9 @@ function Command({ selected }: { selected: AssetId }) {
             whileTap={{ scale: 0.97 }}
             onClick={doCycle}
             disabled={s.busy}
-            className="w-full rounded-xl border border-gold/50 bg-gold/10 py-3 font-semibold text-gold hover:bg-gold/20 disabled:opacity-60"
+            className="tx w-full rounded-control bg-gold py-3 font-semibold text-black hover:bg-gold-bright disabled:opacity-60"
           >
-            Next cycle → <span className="text-xs font-normal text-muted">(now cycle {s.cycle})</span>
+            Next cycle → <span className="text-xs font-normal text-black/60">(now cycle {s.cycle})</span>
           </motion.button>
           <p className="mt-1.5 text-center text-[11px] text-muted">Advances the market: events fire, prices move, yield pays.</p>
         </div>
@@ -142,7 +143,7 @@ function MarketLive({ selected, onSelect }: { selected: AssetId; onSelect: (id: 
   const cycle = useGame((s) => s.cycle);
 
   return (
-    <Panel title="Market Live" right={<span className="text-[11px] text-muted">Cycle {cycle} · <span className="text-amber-300">SIMULATION</span></span>} className="overflow-hidden">
+    <Panel title="Market Live" right={<span className="text-[11px] text-muted">Cycle {cycle} · <span className="text-gold">SIMULATION</span></span>} className="overflow-hidden">
       <div className="-mx-4 -mt-4 mb-3 overflow-hidden border-b border-line bg-black/20 py-1.5">
         <div className="marquee flex w-max gap-6 whitespace-nowrap text-xs">
           {[...ASSETS, ...ASSETS].map((a, i) => (
@@ -156,7 +157,7 @@ function MarketLive({ selected, onSelect }: { selected: AssetId; onSelect: (id: 
       </div>
       <div className="h-full overflow-auto">
         <table className="w-full text-sm">
-          <thead className="text-left text-[11px] uppercase tracking-wider text-muted">
+          <thead className="text-left text-xs text-muted">
             <tr>
               <th className="pb-2 font-medium">Asset</th>
               <th className="hidden pb-2 font-medium md:table-cell">Class</th>
@@ -168,15 +169,13 @@ function MarketLive({ selected, onSelect }: { selected: AssetId; onSelect: (id: 
           <tbody>
             {ASSETS.map((a) => {
               const change = prices[a.id] / prevOf(history[a.id]) - 1;
-              const heat = Math.min(0.16, Math.abs(change) * 3);
               const owned = (holdings[a.id]?.qty ?? 0) > 0;
               return (
                 <tr
                   key={a.id}
                   onClick={() => onSelect(a.id)}
                   aria-selected={selected === a.id}
-                  className={`cursor-pointer border-t border-line transition ${selected === a.id ? "outline outline-1 -outline-offset-1 outline-gold/60" : "hover:bg-white/5"}`}
-                  style={{ backgroundColor: change >= 0 ? `rgba(34,197,94,${heat})` : `rgba(239,68,68,${heat})` }}
+                  className={`cursor-pointer border-t border-line transition ${selected === a.id ? "outline outline-1 -outline-offset-1 outline-gold/60" : "hover:bg-panel-2"}`}
                 >
                   <td className="py-2.5 pr-2">
                     <button className="flex items-center gap-2 text-left" onClick={() => onSelect(a.id)}>
@@ -215,7 +214,7 @@ function WorldEvents({ onOpenInfo }: { onOpenInfo: () => void }) {
       title="World Events"
       right={
         <button onClick={onOpenInfo} className="text-[11px] text-gold hover:underline">
-          Powered by reactivity →
+          How this runs on Rialo
         </button>
       }
       className="overflow-hidden"
@@ -223,13 +222,13 @@ function WorldEvents({ onOpenInfo }: { onOpenInfo: () => void }) {
       <ul className="h-full space-y-2 overflow-auto pr-1 max-lg:max-h-[420px]" aria-live="polite">
         <AnimatePresence initial={false}>
           {feed.map((f) => (
-            <motion.li key={f.id} layout initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className={`rounded-xl border p-3 ${kindStyle(f)}`}>
-              <p className="font-mono text-[10px] tracking-wider text-muted">{f.header}</p>
+            <motion.li key={f.id} layout initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className={`rounded-panel border p-3 ${kindStyle(f)}`}>
+              <p className="text-xs text-faint">{f.header}</p>
               <p className="mt-1 text-sm font-medium">
-                {f.source && <SourceIcon source={f.source} className="mr-1.5 inline h-4 w-4 -translate-y-px text-gold" />}
+                {f.source && <SourceIcon source={f.source} className="mr-1.5 inline h-4 w-4 -translate-y-px text-muted" />}
                 {f.title}
               </p>
-              {f.source && <p className="text-[11px] text-gold">{f.source}</p>}
+              {f.source && <p className="text-xs text-muted">{f.source}</p>}
               {f.detail && <p className="mt-1 text-xs text-muted">{f.detail}</p>}
             </motion.li>
           ))}
@@ -241,19 +240,9 @@ function WorldEvents({ onOpenInfo }: { onOpenInfo: () => void }) {
 }
 
 const kindStyle = (f: FeedEntry) =>
-  f.kind === "event" ? "border-gold/30 bg-gold/5" : f.kind === "yield" ? "border-up/30 bg-up/5" : f.kind === "auction" ? "border-purple-400/30 bg-purple-400/5" : "border-line bg-white/[0.02]";
+  f.kind === "event" ? "border-line bg-panel-2" : f.kind === "yield" ? "border-line bg-panel" : f.kind === "auction" ? "border-line bg-panel-2" : "border-line bg-panel-2";
 
 /** Price cell that flashes gold whenever the price changes. */
 function PriceCell({ value }: { value: number }) {
-  return (
-    <motion.span
-      key={value}
-      initial={{ backgroundColor: "rgba(232,184,74,0.35)" }}
-      animate={{ backgroundColor: "rgba(232,184,74,0)" }}
-      transition={{ duration: 1.2 }}
-      className="tabular rounded px-1.5 py-0.5 font-mono font-medium"
-    >
-      {fmt(value)}
-    </motion.span>
-  );
+  return <Rolling value={value} format={(n) => fmt(n)} className="font-medium" />;
 }

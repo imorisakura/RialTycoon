@@ -54,6 +54,10 @@ For local development, put the same two lines in `.env.local` (never commit it).
 5. Add your dev and production origins (for example `http://localhost:3000` and `https://rialtycoon.rialo.app`) to the allowed domains.
 6. Never commit `.env.local`. The app needs no secret; `NEXT_PUBLIC_PRIVY_APP_ID` is public.
 
+## Design
+
+The visual system follows the thesis in [`DESIGN.md`](./DESIGN.md): an exchange quote board, built for legibility over a Discord screen share. Tokens live in `src/app/globals.css`.
+
 ## How it is built
 
 | Area | Where | Notes |

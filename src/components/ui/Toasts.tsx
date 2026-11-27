@@ -34,7 +34,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
-              className={`rounded-xl border px-4 py-3 text-sm shadow-2xl shadow-black/60 ${
+              className={`rounded-panel border px-4 py-3 text-sm shadow-[0_8px_24px_rgba(0,0,0,0.45)] ${
                 t.tone === "ok"
                   ? "border-up/40 bg-[#0e1a12] text-ink"
                   : t.tone === "error"

@@ -2,55 +2,47 @@
 
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText } from "gsap/SplitText";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GoogleButton } from "@/components/ui/GoogleButton";
-import { AssetIcon } from "@/components/ui/Icons";
-import { Delta, Sparkline } from "@/components/ui/Sparkline";
-import { ASSET_BY_ID, ASSET_CLASSES } from "@/lib/game/data";
-import { useDemoPrices, type DemoQuote } from "./useDemoPrices";
+import { LiveAssetIcon } from "@/components/ui/Icons";
+import { Change, Rolling, usd } from "@/components/ui/Rolling";
+import { useSharedMarket } from "@/lib/market/LiveMarketContext";
+import { CATEGORY_LABEL, LIVE_ASSETS, LIVE_BY_ID, type LiveCategory, type LiveQuote, type QuoteSource } from "@/lib/market/universe";
 
-gsap.registerPlugin(ScrollTrigger, SplitText);
+gsap.registerPlugin(ScrollTrigger);
 
+/** Mechanic → the Rialo feature that would run it → what that feature removes. Used here and in the game's info panel. */
 export const RIALO_MAPPING = [
-  { mechanic: "Live prices", feature: "Native HTTPS calls", detail: "Contracts read price APIs directly — no third-party oracle." },
-  { mechanic: "World events", feature: "Reactivity", detail: "ON / EVERY triggers react to events — no keeper bots." },
-  { mechanic: "Auctions & loot fairness", feature: "TEE randomness", detail: "Sealed bids and fair draws in confidential execution." },
-  { mechanic: "Yield & cycle timing", feature: "Scheduled transactions", detail: "On-chain timers pay yield and advance cycles." },
-  { mechanic: "Google identity", feature: "Rialo Identity", detail: "Your Google sign-in maps to an on-chain identity." },
+  { mechanic: "Live prices", feature: "Native HTTPS calls", detail: "Contracts read price APIs directly, with no third-party oracle in between." },
+  { mechanic: "World events", feature: "Reactivity", detail: "ON and EVERY triggers react to events, so no keeper bots poll for them." },
+  { mechanic: "Sealed-bid auctions", feature: "TEE randomness", detail: "Bids stay confidential and ties are broken by verifiable randomness." },
+  { mechanic: "Yield and cycles", feature: "Scheduled transactions", detail: "On-chain timers pay yield and advance cycles without a cron server." },
+  { mechanic: "Google sign-in", feature: "Rialo Identity", detail: "A Google account maps to an on-chain identity instead of a seed phrase." },
 ];
 
+const BOARD = ["BTC", "ETH", "SOL", "PAXG", "NVDA", "AAPL", "USO", "SPY"];
 const NAV = [
   { href: "#markets", label: "Markets" },
-  { href: "#how", label: "How to play" },
-  { href: "#why-rialo", label: "Why Rialo" },
+  { href: "#how", label: "How it works" },
+  { href: "#rialo", label: "Why Rialo" },
 ];
 
-const STEPS = [
-  ["Sign in with Google", "An embedded wallet is created for you and 10,000 $RIALO lands on devnet (simulated). No seed phrase, ever."],
-  ["Read the world", "Each cycle, world events move the market. A strait closes, oil jumps. Rates fall, property climbs."],
-  ["Become a Tycoon", "Collect yield, time your exits and grow to 25,000 $RIALO. The season leaderboard ranks return on capital."],
-];
+export const SOURCE_NAME: Record<QuoteSource, string> = {
+  coinbase: "Coinbase",
+  coingecko: "CoinGecko",
+  finnhub: "Finnhub",
+  sim: "Sim, no data",
+};
 
-function useReveals(root: React.RefObject<HTMLElement | null>) {
+function useEnter(root: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
     const el = root.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
-      el.querySelectorAll<HTMLElement>("[data-split]").forEach((h) => {
-        const split = SplitText.create(h, { type: "lines", mask: "lines" });
-        gsap.from(split.lines, {
-          yPercent: 110,
-          duration: 1.1,
-          ease: "expo.out",
-          stagger: 0.08,
-          scrollTrigger: { trigger: h, start: "top 85%" },
-        });
-      });
-      gsap.set("[data-reveal]", { y: 40, opacity: 0 });
-      ScrollTrigger.batch("[data-reveal]", {
-        start: "top 88%",
-        onEnter: (batch) => gsap.fromTo(batch, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: "power3.out", stagger: 0.07, overwrite: true }),
+      gsap.set("[data-enter]", { y: 16, opacity: 0 });
+      ScrollTrigger.batch("[data-enter]", {
+        start: "top 90%",
+        onEnter: (b) => gsap.to(b, { y: 0, opacity: 1, duration: 0.24, ease: "power2.out", stagger: 0.04, overwrite: true }),
       });
     }, el);
     return () => ctx.revert();
@@ -58,20 +50,22 @@ function useReveals(root: React.RefObject<HTMLElement | null>) {
 }
 
 export function Landing() {
-  const quotes = useDemoPrices();
+  const { quotes, stream, market } = useSharedMarket();
   const ref = useRef<HTMLDivElement>(null);
-  useReveals(ref);
+  useEnter(ref);
+  const liveCount = Object.values(quotes).filter((q) => q.source !== "sim").length;
 
   return (
     <div id="landing" ref={ref} className="relative bg-bg">
-      <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-bg/75 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 md:px-10">
-          <a href="#landing" className="font-display text-2xl leading-none">
-            Rial<span className="italic text-gold">Tycoon</span>
+      <header className="sticky top-0 z-40 border-b border-line bg-bg">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-5 md:px-8">
+          <a href="#landing" className="flex items-center gap-2.5 text-[17px] font-semibold tracking-tight">
+            <CoinMark />
+            RialTycoon
           </a>
-          <nav className="hidden gap-8 md:flex">
+          <nav className="hidden gap-7 text-sm text-muted md:flex">
             {NAV.map((n) => (
-              <a key={n.href} href={n.href} className="eyebrow text-muted transition hover:text-ink">
+              <a key={n.href} href={n.href} className="tx hover:text-ink">
                 {n.label}
               </a>
             ))}
@@ -82,221 +76,279 @@ export function Landing() {
         </div>
       </header>
 
-      <Ticker quotes={quotes} />
+      <Tape quotes={quotes} />
 
-      {/* Hero */}
-      <section className="mx-auto max-w-7xl px-5 pb-20 pt-20 md:px-10 md:pb-28 md:pt-28">
-        <p className="eyebrow text-gold" data-reveal>
-          Built for Rialo · Devnet preview
-        </p>
-        <h1 data-split className="mt-6 max-w-5xl font-display text-[15vw] leading-[0.88] tracking-[-0.02em] md:text-[8.5vw] xl:text-[128px]">
-          Own the real world. <em className="text-gold">Play it like a tycoon.</em>
-        </h1>
-        <div className="mt-14 grid gap-12 md:grid-cols-[1fr_1.15fr] md:items-end">
-          <div data-reveal>
-            <p className="max-w-md text-lg leading-relaxed text-ink/75">
-              Gold, oil, the S&amp;P 500 and Jakarta CBD property — tokenized, tradable and moved by world events. Grow 10,000 $RIALO into
-              a 25,000 empire.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-5">
-              <GoogleButton size="lg" />
-              <span className="eyebrow text-muted">No extension · No seed phrase</span>
-            </div>
+      {/* Hero: the board is the product, read from the live feed. */}
+      <section className="mx-auto grid max-w-7xl gap-12 px-5 pb-20 pt-14 md:px-8 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:pb-28 lg:pt-20">
+        <div className="flex flex-col justify-center" data-enter>
+          <h1 className="text-[44px] font-semibold leading-[1.02] tracking-[-0.035em] sm:text-6xl lg:text-[68px]">Trade the real world.</h1>
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-muted">
+            Bitcoin, Nvidia, gold and oil at live market prices, traded with play money. Sign in with Google and you start with{" "}
+            <span className="text-ink">10,000 $RIALO</span>.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-4">
+            <GoogleButton size="lg" />
           </div>
-          <MarketPanel quotes={quotes} />
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section aria-label="Stats" className="border-y border-white/[0.07]">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 md:grid-cols-4">
-          {[
-            ["8", "Tradable real-world assets"],
-            ["14", "World events that move prices"],
-            ["10k", "$RIALO starting grant"],
-            ["25k", "Net worth to reach Tycoon"],
-          ].map(([v, l], i) => (
-            <div key={l} data-reveal className={`px-5 py-10 md:px-10 ${i % 2 ? "" : "border-r"} border-white/[0.07] md:border-r md:last:border-r-0`}>
-              <p className="font-display text-6xl leading-none text-gold md:text-7xl">{v}</p>
-              <p className="eyebrow mt-3 text-muted">{l}</p>
+          <dl className="mt-12 grid max-w-md grid-cols-3 gap-6 border-t border-line pt-6 text-sm">
+            <div>
+              <dt className="text-muted">Markets</dt>
+              <dd className="tabular mt-1 text-2xl font-semibold">{LIVE_ASSETS.length}</dd>
             </div>
-          ))}
+            <div>
+              <dt className="text-muted">Live now</dt>
+              <dd className="tabular mt-1 text-2xl font-semibold">{market ? liveCount : "…"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">US session</dt>
+              <dd className="mt-1 text-2xl font-semibold">{market ? (market.usMarketOpen ? "Open" : "Closed") : "…"}</dd>
+            </div>
+          </dl>
         </div>
+        <Board quotes={quotes} stream={stream} />
       </section>
 
-      {/* Featured assets */}
-      <section id="markets" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-24 md:px-10 md:py-32">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="eyebrow text-gold">01 — Markets</p>
-            <h2 data-split className="mt-4 font-display text-5xl leading-[0.95] md:text-7xl">
-              Featured assets
-            </h2>
-          </div>
-          <p className="eyebrow text-amber-300/80">Demo prices · simulation</p>
-        </div>
-        <div className="mt-12 grid border-l border-t border-white/[0.07] sm:grid-cols-2 lg:grid-cols-4">
-          {quotes
-            .filter((q) => ["GOLD", "OIL", "SPX", "SCBD"].includes(q.id))
-            .map((q, i) => (
-              <article
-                key={q.id}
-                data-reveal
-                className="group relative border-b border-r border-white/[0.07] p-6 transition-colors duration-500 hover:bg-gold/[0.04] md:p-7"
-              >
-                <div className="flex items-start justify-between">
-                  <span className="font-mono text-xs text-muted">0{i + 1}</span>
-                  <AssetIcon id={q.id} className="h-7 w-7 text-gold transition-transform duration-500 group-hover:-translate-y-1" />
-                </div>
-                <h3 className="mt-14 font-display text-4xl leading-none">{q.name}</h3>
-                <p className="eyebrow mt-2 text-muted">
-                  {q.ticker} · {ASSET_CLASSES[ASSET_BY_ID[q.id].classId].name}
-                </p>
-                <div className="mt-8 flex items-end justify-between gap-3">
-                  <div>
-                    <p className="tabular font-mono text-2xl">{q.price.toFixed(2)}</p>
-                    <Delta value={q.change} className="mt-1 block text-xs" />
-                  </div>
-                  <Sparkline points={q.points} width={104} height={36} />
-                </div>
-                <span className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-gold transition-transform duration-500 group-hover:scale-x-100" />
-              </article>
-            ))}
-        </div>
-      </section>
+      <Markets quotes={quotes} />
 
-      {/* How to play */}
-      <section id="how" className="scroll-mt-20 border-t border-white/[0.07]">
-        <div className="mx-auto max-w-7xl px-5 py-24 md:px-10 md:py-32">
-          <p className="eyebrow text-gold">02 — How to play</p>
-          <h2 data-split className="mt-4 max-w-3xl font-display text-5xl leading-[0.95] md:text-7xl">
-            Three moves from <em className="text-gold">intern to tycoon.</em>
+      {/* How it works */}
+      <section id="how" className="scroll-mt-16 border-t border-line">
+        <div className="mx-auto grid max-w-7xl gap-10 px-5 py-20 md:px-8 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:py-28">
+          <h2 data-enter className="text-4xl font-semibold tracking-[-0.03em] md:text-5xl">
+            How a game works
           </h2>
-          <ol className="mt-16 grid gap-12 md:grid-cols-3 md:gap-10">
-            {STEPS.map(([t, d], i) => (
-              <li key={t} data-reveal className="border-t border-white/15 pt-6">
-                <span className="font-display text-7xl leading-none text-white/15">0{i + 1}</span>
-                <p className="mt-6 font-display text-3xl">{t}</p>
-                <p className="mt-3 text-sm leading-relaxed text-muted">{d}</p>
-              </li>
-            ))}
+          <ol className="space-y-8 text-[17px] leading-relaxed text-muted">
+            <li data-enter>
+              <p className="font-medium text-ink">Sign in with Google.</p>
+              Privy creates an embedded wallet after your first login. There is no seed phrase to write down and no extension to install.
+            </li>
+            <li data-enter>
+              <p className="font-medium text-ink">Trade the Live Market.</p>
+              You get 10,000 $RIALO of play money, worth 1 USD each. Crypto trades around the clock; US stocks and the ETFs that track gold, oil and
+              copper trade during the New York session.
+            </li>
+            <li data-enter>
+              <p className="font-medium text-ink">Or play the Simulation Season.</p>
+              Eight assets, fourteen world events that move them, yield every cycle, a sealed-bid auction and a leaderboard ranked by return on
+              capital. Reach 25,000 $RIALO to become a Tycoon.
+            </li>
+            <li data-enter>
+              <p className="font-medium text-ink">Protect the big moves.</p>
+              Sells above 100 $RIALO, auction bids, withdrawals and wallet export ask for a passkey or an authenticator code. Small trades never
+              do.
+            </li>
           </ol>
         </div>
       </section>
 
       {/* Why Rialo */}
-      <section id="why-rialo" className="scroll-mt-20 border-t border-white/[0.07] bg-[#0d0c0a]">
-        <div className="mx-auto max-w-7xl px-5 py-24 md:px-10 md:py-32">
-          <div className="grid gap-8 md:grid-cols-[1fr_1.2fr] md:items-end">
-            <div>
-              <p className="eyebrow text-gold">03 — Why Rialo</p>
-              <h2 data-split className="mt-4 font-display text-5xl leading-[0.95] md:text-7xl">
-                Every mechanic, <em className="text-gold">native to the chain.</em>
-              </h2>
-            </div>
-            <p data-reveal className="max-w-lg text-muted md:justify-self-end">
-              Rialo is its own SVM-compatible Layer 1 by Subzero Labs. Each game mechanic maps to a Rialo-native feature that would power it
-              for real. Today every price and balance is a local simulation.
+      <section id="rialo" className="scroll-mt-16 border-t border-line bg-panel">
+        <div className="mx-auto max-w-7xl px-5 py-20 md:px-8 lg:py-28">
+          <div className="grid gap-6 lg:grid-cols-[5fr_7fr] lg:gap-16">
+            <h2 data-enter className="text-4xl font-semibold tracking-[-0.03em] md:text-5xl">
+              Built for Rialo
+            </h2>
+            <p data-enter className="max-w-xl text-[17px] leading-relaxed text-muted">
+              Rialo is a Layer 1 from Subzero Labs, compatible with the Solana VM but not the Solana network. Each part of the game maps to a
+              Rialo feature that would run it on-chain. Today the game uses a mock adapter and calls no Rialo RPC.
             </p>
           </div>
-          <div className="mt-14 border-t border-white/10">
-            {RIALO_MAPPING.map((m, i) => (
-              <div
-                key={m.mechanic}
-                data-reveal
-                className="group grid gap-2 border-b border-white/10 py-6 transition-colors hover:bg-white/[0.02] md:grid-cols-[60px_1fr_1fr_1.4fr] md:items-baseline md:gap-6"
-              >
-                <span className="font-mono text-xs text-muted">0{i + 1}</span>
-                <span className="font-display text-3xl">{m.mechanic}</span>
-                <span className="font-display text-3xl italic text-gold">→ {m.feature}</span>
-                <span className="text-sm text-muted">{m.detail}</span>
-              </div>
-            ))}
+          <div className="mt-12 overflow-x-auto" data-enter>
+            <table className="w-full min-w-[640px] text-left">
+              <thead className="text-sm text-muted">
+                <tr className="border-b border-line">
+                  <th className="py-3 pr-6 font-medium">In the game</th>
+                  <th className="py-3 pr-6 font-medium">On Rialo</th>
+                  <th className="py-3 font-medium">What it replaces</th>
+                </tr>
+              </thead>
+              <tbody>
+                {RIALO_MAPPING.map((m) => (
+                  <tr key={m.mechanic} className="border-b border-line">
+                    <td className="py-5 pr-6 text-lg font-medium">{m.mechanic}</td>
+                    <td className="py-5 pr-6 text-lg text-gold">{m.feature}</td>
+                    <td className="py-5 text-muted">{m.detail}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="relative overflow-hidden border-t border-white/[0.07]">
-        <div className="pointer-events-none absolute -right-40 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-gold/20 blur-[140px]" />
-        <div className="relative mx-auto max-w-7xl px-5 py-28 md:px-10 md:py-40">
-          <h2 data-split className="max-w-4xl font-display text-6xl leading-[0.9] md:text-[9vw] xl:text-[136px]">
-            Start your empire <em className="text-gold">in one click.</em>
-          </h2>
-          <div data-reveal className="mt-12 flex flex-wrap items-center gap-6">
-            <GoogleButton size="lg" />
-            <p className="max-w-xs text-sm text-muted">Google sign-in. Secure embedded wallet. 2FA only when it matters.</p>
-          </div>
+      <section className="border-t border-line">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-5 py-20 md:flex-row md:items-center md:px-8 lg:py-24">
+          <h2 className="text-4xl font-semibold tracking-[-0.03em] md:text-5xl">Start with 10,000 $RIALO.</h2>
+          <GoogleButton size="lg" />
         </div>
       </section>
 
-      <footer className="border-t border-white/[0.07] pb-28 pt-14">
-        <div className="mx-auto max-w-7xl px-5 md:px-10">
-          <p aria-hidden="true" className="text-outline select-none font-display text-[20vw] leading-[0.8] md:text-[15vw]">
-            RialTycoon
+      <footer className="border-t border-line pb-28 pt-10 text-sm text-muted">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 px-5 md:flex-row md:px-8">
+          <p className="flex items-center gap-2.5 text-ink">
+            <CoinMark /> RialTycoon <span className="text-muted">rialtycoon.rialo.app</span>
           </p>
-          <div className="mt-10 flex flex-col justify-between gap-4 text-sm text-muted md:flex-row">
-            <p>
-              <span className="text-ink">RialTycoon</span> · rialtycoon.rialo.app
-            </p>
-            <p>Balances are play money. Landing prices are demo; in-game Live Market prices come from labeled third-party feeds. Not financial advice.</p>
-          </div>
+          <p>
+            Prices from Coinbase, Finnhub and{" "}
+            <a href="https://www.coingecko.com" className="tx underline underline-offset-2 hover:text-ink" target="_blank" rel="noopener noreferrer">
+              CoinGecko
+            </a>
+            . Balances are play money. Not financial advice.
+          </p>
         </div>
       </footer>
     </div>
   );
 }
 
-function Ticker({ quotes }: { quotes: DemoQuote[] }) {
-  const row = [...quotes, ...quotes];
+export function CoinMark({ className = "h-6 w-6" }: { className?: string }) {
   return (
-    <div className="overflow-hidden border-b border-white/[0.07] py-3" aria-label="Demo price ticker">
-      <div className="marquee flex w-max items-center gap-10 whitespace-nowrap">
-        {row.map((q, i) => (
-          <span key={i} className="flex items-center gap-3" aria-hidden={i >= quotes.length}>
-            <AssetIcon id={q.id} className="h-4 w-4 text-gold/70" />
-            <span className="font-display text-xl">{q.name}</span>
-            <span className="tabular font-mono text-sm text-ink/80">{q.price.toFixed(2)}</span>
-            <Delta value={q.change} className="text-xs" />
-            <span className="text-white/15">/</span>
-          </span>
-        ))}
-        <span className="eyebrow text-amber-300/80">Demo prices · simulation</span>
-      </div>
-    </div>
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="11" fill="var(--color-gold)" />
+      <circle cx="12" cy="12" r="8.4" fill="none" stroke="var(--color-gold-deep)" strokeWidth="1" />
+      <path d="M9.2 16.5V7.5h3.4a2.6 2.6 0 0 1 0 5.2H9.2m3.2 0 2.6 3.8" fill="none" stroke="#2a1f08" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
-function MarketPanel({ quotes }: { quotes: DemoQuote[] }) {
+function Tape({ quotes }: { quotes: Record<string, LiveQuote> }) {
+  const items = LIVE_ASSETS.filter((a) => quotes[a.id]);
+  if (!items.length) return <div className="h-11 border-b border-line" />;
+  const row = [...items, ...items];
   return (
-    <div data-reveal className="border border-white/10 bg-white/[0.02] backdrop-blur">
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
-        <span className="eyebrow flex items-center gap-2 text-ink">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-up" /> Market panel
-        </span>
-        <span className="eyebrow text-amber-300/80">Demo · simulation</span>
-      </div>
-      <div className="divide-y divide-white/[0.06]">
-        {quotes.slice(0, 6).map((q) => (
-          <div key={q.id} className="grid grid-cols-[1.5fr_1fr_auto] items-center gap-3 px-5 py-3">
-            <span className="flex items-center gap-3">
-              <AssetIcon id={q.id} className="h-4 w-4 text-gold" />
-              <span className="font-display text-lg leading-none">{q.name}</span>
+    <div className="overflow-hidden border-b border-line bg-panel" aria-label="Live ticker tape">
+      <div className="tape flex w-max items-center">
+        {row.map((a, i) => {
+          const q = quotes[a.id];
+          return (
+            <span key={i} className="flex h-11 items-center gap-2.5 border-r border-line px-5 text-sm" aria-hidden={i >= items.length}>
+              <span className="font-mono text-xs text-muted">{a.ticker}</span>
+              <span className="tabular font-medium">{usd(q.price)}</span>
+              <Change value={q.change} className="text-xs" />
             </span>
-            <span className="tabular text-right font-mono text-sm">{q.price.toFixed(2)}</span>
-            <Delta value={q.change} className="w-20 text-right text-xs" />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
-/** Sticky sign-in CTA that is never lost while scrolling the opening and the landing page. */
+function StreamState({ stream }: { stream: string }) {
+  const live = stream === "live";
+  return (
+    <span className="flex items-center gap-2 text-sm text-muted">
+      <span className={`h-2 w-2 rounded-full ${live ? "bg-up" : "bg-faint"}`} />
+      {live ? "Streaming from Coinbase" : stream === "connecting" ? "Connecting to the stream" : "Stream offline, using snapshots"}
+    </span>
+  );
+}
+
+function Board({ quotes, stream }: { quotes: Record<string, LiveQuote>; stream: string }) {
+  return (
+    <div data-enter className="overflow-hidden rounded-[var(--radius-panel)] border border-line bg-panel">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
+        <span className="font-medium">Live board</span>
+        <StreamState stream={stream} />
+      </div>
+      <ul>
+        {BOARD.map((id) => {
+          const a = LIVE_BY_ID[id];
+          const q = quotes[id];
+          return (
+            <li key={id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-line px-5 py-3.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto_96px]">
+              <div className="flex min-w-0 items-center gap-3">
+                <LiveAssetIcon id={id} category={a.category} className="h-5 w-5 shrink-0 text-muted" />
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{a.category === "commodity" ? `${a.name} (${a.ticker})` : a.name}</p>
+                  <p className="text-xs text-faint">
+                    <span className="font-mono">{a.ticker}</span>
+                    {q && <>, {SOURCE_NAME[q.source]}</>}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right text-[26px] font-semibold leading-none tracking-[-0.02em] sm:text-[30px]">
+                {q ? <Rolling value={q.price} format={usd} /> : <span className="text-base text-faint">Loading</span>}
+              </div>
+              <div className="col-start-2 text-right text-sm sm:col-start-3">{q && <Change value={q.change} />}</div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+const TABS: LiveCategory[] = ["crypto", "stock", "commodity", "income"];
+
+function Markets({ quotes }: { quotes: Record<string, LiveQuote> }) {
+  const [tab, setTab] = useState<LiveCategory>("crypto");
+  const rows = useMemo(() => LIVE_ASSETS.filter((a) => a.category === tab), [tab]);
+  return (
+    <section id="markets" className="scroll-mt-16 border-t border-line">
+      <div className="mx-auto max-w-7xl px-5 py-20 md:px-8 lg:py-28">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div data-enter>
+            <h2 className="text-4xl font-semibold tracking-[-0.03em] md:text-5xl">Every market in the game</h2>
+            <p className="mt-3 max-w-xl text-muted">
+              Gold, oil, copper and the other commodities are priced through the US-listed ETFs that track them. Each row names its source.
+            </p>
+          </div>
+          <div role="tablist" aria-label="Market category" className="flex flex-wrap gap-1 rounded-[var(--radius-control)] border border-line p-1">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                role="tab"
+                aria-selected={tab === t}
+                onClick={() => setTab(t)}
+                className={`tx rounded-[4px] px-3.5 py-1.5 text-sm ${tab === t ? "bg-ink text-bg" : "text-muted hover:text-ink"}`}
+              >
+                {CATEGORY_LABEL[t]}
+                <span className="tabular ml-1.5 opacity-60">{LIVE_ASSETS.filter((a) => a.category === t).length}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-10 overflow-x-auto">
+          <table className="w-full min-w-[620px] text-left">
+            <thead className="text-sm text-muted">
+              <tr className="border-b border-line">
+                <th className="py-3 pr-4 font-medium">Asset</th>
+                <th className="py-3 pr-4 text-right font-medium">Price (USD)</th>
+                <th className="py-3 pr-4 text-right font-medium">Change</th>
+                <th className="py-3 pr-4 font-medium">Trades</th>
+                <th className="py-3 font-medium">Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((a) => {
+                const q = quotes[a.id];
+                return (
+                  <tr key={a.id} className="border-b border-line">
+                    <td className="py-3.5 pr-4">
+                      <span className="flex items-center gap-3">
+                        <LiveAssetIcon id={a.id} category={a.category} className="h-5 w-5 shrink-0 text-muted" />
+                        <span className="font-medium">{a.name}</span>
+                        <span className="font-mono text-xs text-faint">{a.ticker}</span>
+                      </span>
+                    </td>
+                    <td className="py-3.5 pr-4 text-right text-lg font-semibold">{q ? <Rolling value={q.price} format={usd} /> : <span className="text-sm text-faint">Loading</span>}</td>
+                    <td className="py-3.5 pr-4 text-right text-sm">{q && <Change value={q.change} />}</td>
+                    <td className="py-3.5 pr-4 text-sm text-muted">{a.category === "crypto" ? "24/7" : "US market hours"}</td>
+                    <td className={`py-3.5 text-sm ${q?.source === "sim" ? "text-gold" : "text-muted"}`}>{q ? SOURCE_NAME[q.source] : "…"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Sticky sign-in, never lost while scrolling the opening and the landing page. */
 export function StickyCta() {
   return (
     <div className="fixed bottom-4 right-1/2 z-50 translate-x-1/2 md:right-6 md:translate-x-0">
-      <GoogleButton className="shadow-2xl shadow-black/60 ring-1 ring-gold/40" />
+      <GoogleButton className="shadow-[0_8px_24px_rgba(0,0,0,0.5)]" />
     </div>
   );
 }

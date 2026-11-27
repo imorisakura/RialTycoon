@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/Modal";
 import { truncate, useAuth, type SessionCheck } from "@/lib/auth/context";
 import { useMfaGate } from "@/lib/mfa/gate";
 import { KeyIcon, ShieldIcon } from "@/components/ui/Icons";
+import { CoinMark } from "@/components/landing/Landing";
 import { netWorthOf, useGame } from "@/lib/game/store";
 import { RialoInfoModal, SimBadge, TargetBar } from "./bits";
 import { useLive } from "@/lib/game/live-store";
@@ -88,18 +89,19 @@ function Terminal() {
       <Onboarding />
       <NewDeviceCheck />
 
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-line bg-bg/90">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 px-3 py-2.5 md:px-5">
-          <Link href="/" className="font-display text-2xl leading-none">
-            Rial<span className="italic text-gold">Tycoon</span>
+          <Link href="/" className="flex items-center gap-2.5 text-[17px] font-semibold tracking-tight">
+            <CoinMark />
+            RialTycoon
           </Link>
-          <div role="group" aria-label="Game mode" className="flex rounded-lg border border-white/10 p-0.5 text-xs">
+          <div role="group" aria-label="Game mode" className="flex rounded-control border border-line p-0.5 text-xs">
             {(["live", "season"] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 aria-pressed={mode === m}
-                className={`rounded-md px-2.5 py-1 ${mode === m ? "bg-gold text-black" : "text-muted hover:text-ink"}`}
+                className={`rounded-control px-2.5 py-1 ${mode === m ? "bg-ink text-bg" : "text-muted hover:text-ink"}`}
               >
                 {m === "live" ? "Live Market" : "Simulation Season"}
               </button>
@@ -112,17 +114,17 @@ function Terminal() {
                 key={t}
                 onClick={() => setTab(t)}
                 aria-current={tab === t}
-                className={`rounded-lg px-3 py-1.5 text-sm ${tab === t ? "bg-gold/15 text-gold" : "text-muted hover:text-ink"}`}
+                className={`rounded-control px-3 py-1.5 text-sm ${tab === t ? "bg-panel-2 text-ink" : "text-muted hover:text-ink"}`}
               >
                 {t}
               </button>
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <button onClick={() => setInfoOpen(true)} className="hidden rounded-lg border border-line px-3 py-1.5 text-xs text-muted hover:text-ink sm:block">
+            <button onClick={() => setInfoOpen(true)} className="hidden rounded-control border border-line px-3 py-1.5 text-xs text-muted hover:text-ink sm:block">
               Why Rialo?
             </button>
-            <Link href="/security" className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs text-muted hover:text-ink">
+            <Link href="/security" className="inline-flex items-center gap-1.5 rounded-control border border-line px-3 py-1.5 text-xs text-muted hover:text-ink">
               <ShieldIcon className="h-3.5 w-3.5" /> Security
             </Link>
             <ProfileChip />
@@ -174,7 +176,7 @@ function ProfileChip() {
           {truncate(user.address)}
         </p>
       </div>
-      <button onClick={() => auth.logout()} className="ml-1 rounded-full px-2 py-1 text-xs text-muted hover:bg-white/5 hover:text-ink">
+      <button onClick={() => auth.logout()} className="ml-1 rounded-full px-2 py-1 text-xs text-muted hover:bg-panel-2 hover:text-ink">
         Sign out
       </button>
     </div>
@@ -193,12 +195,12 @@ function MfaNudge() {
   }, []);
   if (auth.mfa.enrolled.length || dismissed) return null;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel border border-line bg-panel px-4 py-3 text-sm">
       <p>
-        <KeyIcon className="mr-1.5 inline h-4 w-4 -translate-y-px text-gold" />Protect large sells, bids, withdrawals and wallet export with a <strong>passkey</strong>. Optional — trading stays instant.
+        <KeyIcon className="mr-1.5 inline h-4 w-4 -translate-y-px text-gold" />Protect large sells, bids, withdrawals and wallet export with a <strong>passkey</strong>. It is optional, and small trades stay instant.
       </p>
       <div className="flex gap-2">
-        <Link href="/security" className="rounded-lg bg-gold px-3 py-1.5 font-semibold text-black">
+        <Link href="/security" className="rounded-control bg-gold px-3 py-1.5 font-semibold text-black">
           Set up 2FA
         </Link>
         <button
@@ -208,7 +210,7 @@ function MfaNudge() {
               sessionStorage.setItem("rt-mfa-nudge", "1");
             } catch {}
           }}
-          className="rounded-lg px-3 py-1.5 text-muted hover:text-ink"
+          className="rounded-control px-3 py-1.5 text-muted hover:text-ink"
         >
           Later
         </button>
@@ -249,7 +251,7 @@ function Onboarding() {
 
   const sim = auth.mode === "simulated";
   const steps: { label: string; state: StepState; note: string }[] = [
-    { label: "Google account verified", state: sim ? "info" : "done", note: sim ? "Simulated sign-in — no OAuth" : "Google OAuth / OpenID Connect via Privy" },
+    { label: "Google account verified", state: sim ? "info" : "done", note: sim ? "Simulated sign-in, no OAuth" : "Google OAuth / OpenID Connect via Privy" },
     {
       label: "Identity bound to Google sub",
       state: session ? (session.verified ? "done" : "info") : "pending",
@@ -282,7 +284,7 @@ function Onboarding() {
       <button
         disabled={!done}
         onClick={() => setOpen(false)}
-        className="mt-4 w-full rounded-xl bg-gold px-4 py-3 font-semibold text-black disabled:opacity-50"
+        className="mt-4 w-full rounded-control bg-gold px-4 py-3 font-semibold text-black disabled:opacity-50"
       >
         {done ? "Enter the terminal" : "Setting up…"}
       </button>

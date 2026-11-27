@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Rolling } from "@/components/ui/Rolling";
 import { useMemo, useState } from "react";
 import { LiveAssetIcon } from "@/components/ui/Icons";
 import { Badge } from "@/components/ui/Modal";
@@ -27,10 +28,10 @@ const priceDecimals = (p: number) => (p >= 1000 ? 2 : p >= 1 ? 2 : p >= 0.01 ? 4
 const fmtPrice = (p: number) => fmt(p, priceDecimals(p));
 
 const SOURCE: Record<QuoteSource, { label: string; tone: "up" | "gold" | "warn" }> = {
-  coinbase: { label: "Live · Coinbase", tone: "up" },
-  coingecko: { label: "Live · CoinGecko", tone: "up" },
-  finnhub: { label: "Live · Finnhub", tone: "up" },
-  sim: { label: "Sim · no data", tone: "warn" },
+  coinbase: { label: "Coinbase", tone: "up" },
+  coingecko: { label: "CoinGecko", tone: "up" },
+  finnhub: { label: "Finnhub", tone: "up" },
+  sim: { label: "Sim, no data", tone: "warn" },
 };
 
 export interface LiveData {
@@ -45,8 +46,8 @@ export function LivePricesBadge({ quotes }: { quotes: Record<string, LiveQuote> 
   const all = Object.values(quotes);
   const live = all.filter((q) => q.source !== "sim").length;
   if (!all.length) return <Badge tone="muted">Loading prices</Badge>;
-  if (!live) return <Badge tone="warn">Sim prices · no data source</Badge>;
-  return <Badge tone="up">{live === all.length ? "Live prices" : `Live prices · ${live}/${all.length}`}</Badge>;
+  if (!live) return <Badge tone="warn">Simulated prices</Badge>;
+  return <Badge tone="up">{live === all.length ? "Live prices" : `${live} of ${all.length} prices live`}</Badge>;
 }
 
 function SourceBadge({ source }: { source: QuoteSource }) {
@@ -55,17 +56,7 @@ function SourceBadge({ source }: { source: QuoteSource }) {
 }
 
 function FlashPrice({ value }: { value: number }) {
-  return (
-    <motion.span
-      key={value}
-      initial={{ backgroundColor: "rgba(232,184,74,0.35)" }}
-      animate={{ backgroundColor: "rgba(232,184,74,0)" }}
-      transition={{ duration: 1.2 }}
-      className="tabular rounded px-1.5 py-0.5 font-mono font-medium"
-    >
-      {fmtPrice(value)}
-    </motion.span>
-  );
+  return <Rolling value={value} format={fmtPrice} className="font-medium" />;
 }
 
 const ago = (ms: number) => {
@@ -78,19 +69,19 @@ export function LiveStatus({ data }: { data: LiveData }) {
   const { market, stream, error } = data;
   const sims = Object.values(data.quotes).filter((q) => q.source === "sim").length;
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-white/[0.07] bg-panel px-4 py-3 text-xs text-muted">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-control border border-line bg-panel px-4 py-3 text-xs text-muted">
       <span className="flex items-center gap-2">
-        <span className={`h-2 w-2 rounded-full ${stream === "live" ? "animate-pulse bg-up" : stream === "connecting" ? "bg-gold" : "bg-white/30"}`} />
+        <span className={`h-2 w-2 rounded-full ${stream === "live" ? "bg-up" : stream === "connecting" ? "bg-gold" : "bg-white/30"}`} />
         Crypto stream (Coinbase): {stream === "live" ? "live, 24/7" : stream === "connecting" ? "connecting…" : "offline"}
       </span>
       <span>CoinGecko: {market ? (market.providers.coingecko ? "on (refresh ≈10 min)" : "no API key") : "…"}</span>
       <span>
         Finnhub stocks &amp; ETFs: {market ? (market.providers.finnhub ? "on (refresh ≈1 min)" : "no API key") : "…"}
-        {market && ` · US market ${market.usMarketOpen ? "open" : "closed"}`}
+        {market && `. US market ${market.usMarketOpen ? "open" : "closed"}`}
       </span>
-      {sims > 0 && <span className="text-amber-300">{sims} asset(s) on SIM fallback</span>}
+      {sims > 0 && <span className="text-ink">{sims} of {Object.keys(data.quotes).length} prices simulated</span>}
       {error && <span className="text-down">{error}</span>}
-      <span className="ml-auto">Balances are play money · 1 $RIALO = 1 USD · not financial advice</span>
+      <span className="ml-auto">Play money: 1 $RIALO is 1 USD. Not financial advice.</span>
     </div>
   );
 }
@@ -126,7 +117,7 @@ function LiveCommand({ data, selected }: { data: LiveData; selected: string }) {
 
   const guard = () => {
     if (!quote) return "Waiting for a price…";
-    if (closed) return "US market is closed — stocks and ETFs trade 09:30–16:00 New York time.";
+    if (closed) return "The US market is closed. Stocks and ETFs trade 9:30 to 16:00 New York time.";
     return null;
   };
   const doBuy = () => {
@@ -138,25 +129,25 @@ function LiveCommand({ data, selected }: { data: LiveData; selected: string }) {
   const doSell = async () => {
     const why = guard();
     if (why) return toast(why, "error");
-    if (gated && !(await gate.require("large-sell"))) return toast("Large sell cancelled — 2FA not completed.", "error");
+    if (gated && !(await gate.require("large-sell"))) return toast("Large sell cancelled. 2FA was not completed.", "error");
     const r = useLive.getState().sell(selected, amount, data.quotes[selected] ?? quote!);
     toast(r.message, r.ok ? "ok" : "error");
   };
 
   return (
-    <Panel title="Command · Live" right={<LivePricesBadge quotes={data.quotes} />}>
+    <Panel title="Order" right={<LivePricesBadge quotes={data.quotes} />}>
       <div className="flex h-full flex-col gap-4">
         <div>
           <p className="text-xs text-muted">Live account net worth</p>
-          <p className="font-display text-5xl leading-none">
-            <AnimatedNumber value={nw} /> <span className="font-sans text-sm text-muted">$RIALO</span>
+          <p className="whitespace-nowrap text-[40px] font-semibold leading-none tracking-[-0.03em]">
+            <AnimatedNumber value={nw} /> <span className="text-sm font-normal tracking-normal text-muted">$RIALO</span>
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <div className="rounded-xl bg-white/5 p-2.5">
+            <div className="rounded-panel bg-panel-2 p-2.5">
               <p className="text-[11px] text-muted">Cash</p>
               <AnimatedNumber value={live.cash} className="font-semibold" />
             </div>
-            <div className="rounded-xl bg-white/5 p-2.5">
+            <div className="rounded-panel bg-panel-2 p-2.5">
               <p className="text-[11px] text-muted">P&amp;L since start</p>
               <span className={`tabular font-semibold ${pnl >= 0 ? "text-up" : "text-down"}`}>
                 {pnl >= 0 ? "+" : ""}
@@ -166,20 +157,20 @@ function LiveCommand({ data, selected }: { data: LiveData; selected: string }) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-white/[0.08] p-3">
+        <div className="rounded-panel border border-line p-3">
           <div className="flex items-start justify-between gap-2">
             <span className="flex items-center gap-2">
               <LiveAssetIcon id={asset.id} category={asset.category} className="h-5 w-5 text-gold" />
-              <span className="font-display text-2xl leading-none">{asset.name}</span>
+              <span className="font-semibold tracking-tight text-2xl leading-none">{asset.name}</span>
             </span>
             <span className="text-right">
-              <span className="tabular block font-mono text-sm">{quote ? fmtPrice(quote.price) : "—"}</span>
+              <span className="tabular block text-sm font-medium">{quote ? fmtPrice(quote.price) : "Loading"}</span>
               {quote && <Delta value={quote.change} className="text-[11px]" />}
             </span>
           </div>
           <p className="mt-1 text-xs text-muted">
-            {asset.ticker} · {CATEGORY_LABEL[asset.category]}
-            {asset.proxy && <> · {asset.proxy}</>}
+            {CATEGORY_LABEL[asset.category]}
+            {asset.proxy && <>. {asset.proxy}</>}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {quote && <SourceBadge source={quote.source} />}
@@ -199,20 +190,20 @@ function LiveCommand({ data, selected }: { data: LiveData; selected: string }) {
               min={1}
               value={amount}
               onChange={(e) => setAmount(Math.max(0, Number(e.target.value) || 0))}
-              className="tabular w-full rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5 outline-none focus:border-gold"
+              className="tabular w-full rounded-control border border-line bg-black/30 px-2.5 py-1.5 outline-none focus:border-gold"
             />
             {[50, 100, 500].map((v) => (
-              <button key={v} onClick={() => setAmount(v)} className={`rounded-lg border px-2 text-xs ${amount === v ? "border-gold text-gold" : "border-white/10 text-muted"}`}>
+              <button key={v} onClick={() => setAmount(v)} className={`rounded-control border px-2 text-xs ${amount === v ? "border-gold text-gold" : "border-line text-muted"}`}>
                 {v}
               </button>
             ))}
           </div>
-          {gated && heldValue > 0 && <p className="mt-2 text-xs text-amber-300">Selling more than {fmt(threshold, 0)} $RIALO needs 2FA</p>}
+          {gated && heldValue > 0 && <p className="mt-2 text-xs text-gold">Selling more than {fmt(threshold, 0)} $RIALO needs 2FA</p>}
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <motion.button whileTap={{ scale: 0.96 }} onClick={doBuy} className="rounded-xl bg-up py-2.5 font-semibold text-black">
+            <motion.button whileTap={{ scale: 0.96 }} onClick={doBuy} className="rounded-control bg-up py-2.5 font-semibold text-black">
               Buy
             </motion.button>
-            <motion.button whileTap={{ scale: 0.96 }} onClick={doSell} disabled={!held} className="rounded-xl bg-down py-2.5 font-semibold text-white disabled:opacity-40">
+            <motion.button whileTap={{ scale: 0.96 }} onClick={doSell} disabled={!held} className="rounded-control bg-down py-2.5 font-semibold text-white disabled:opacity-40">
               Sell
             </motion.button>
           </div>
@@ -251,7 +242,7 @@ function LiveMarketTable({ data, selected, onSelect }: { data: LiveData; selecte
             key={f}
             onClick={() => setFilter(f)}
             aria-pressed={filter === f}
-            className={`rounded-full border px-3 py-1 text-xs ${filter === f ? "border-gold bg-gold/10 text-gold" : "border-white/10 text-muted hover:text-ink"}`}
+            className={`rounded-full border px-3 py-1 text-xs ${filter === f ? "border-ink bg-ink text-bg" : "border-line text-muted hover:text-ink"}`}
           >
             {f === "all" ? `All (${LIVE_ASSETS.length})` : CATEGORY_LABEL[f]}
           </button>
@@ -261,12 +252,12 @@ function LiveMarketTable({ data, selected, onSelect }: { data: LiveData; selecte
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search…"
           aria-label="Search assets"
-          className="ml-auto w-full rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-sm outline-none focus:border-gold sm:w-44"
+          className="ml-auto w-full rounded-control border border-line bg-black/30 px-3 py-1.5 text-sm outline-none focus:border-gold sm:w-44"
         />
       </div>
       <div className="h-full overflow-auto pb-10">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 z-10 bg-panel text-left text-[11px] uppercase tracking-wider text-muted">
+          <thead className="sticky top-0 z-10 bg-panel text-left text-xs text-muted">
             <tr>
               <th className="pb-2 font-medium">Asset</th>
               <th className="pb-2 text-right font-medium">Price (USD)</th>
@@ -283,7 +274,7 @@ function LiveMarketTable({ data, selected, onSelect }: { data: LiveData; selecte
                   key={a.id}
                   onClick={() => onSelect(a.id)}
                   aria-selected={selected === a.id}
-                  className={`cursor-pointer border-t border-white/[0.06] transition ${selected === a.id ? "bg-gold/[0.07]" : "hover:bg-white/[0.03]"}`}
+                  className={`cursor-pointer border-t border-line transition ${selected === a.id ? "bg-panel-2" : "hover:bg-panel-2"}`}
                 >
                   <td className="py-2.5 pr-2">
                     <button className="flex items-center gap-2.5 text-left" onClick={() => onSelect(a.id)}>
@@ -295,7 +286,7 @@ function LiveMarketTable({ data, selected, onSelect }: { data: LiveData; selecte
                       {owned && <Badge tone="up">Owned</Badge>}
                     </button>
                   </td>
-                  <td className="text-right">{quote ? <FlashPrice value={quote.price} /> : <span className="text-muted">—</span>}</td>
+                  <td className="text-right">{quote ? <FlashPrice value={quote.price} /> : <span className="text-muted">Loading</span>}</td>
                   <td className="text-right">{quote ? <Delta value={quote.change} className="text-xs" /> : null}</td>
                   <td className="hidden pl-4 md:table-cell">{quote && <SourceBadge source={quote.source} />}</td>
                 </tr>
@@ -320,20 +311,20 @@ function NewsFeed() {
     <Panel title="Market News" right={<span className="text-[11px] text-muted">Source: Finnhub</span>} className="overflow-hidden">
       <ul className="h-full space-y-2 overflow-auto pr-1 max-lg:max-h-[420px]">
         {trades.slice(0, 3).map((t) => (
-          <li key={t.id} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-            <p className="font-mono text-[10px] tracking-wider text-muted">LIVE ACCOUNT · TRADE</p>
+          <li key={t.id} className="rounded-panel border border-line bg-panel-2 p-3">
+            <p className="text-xs text-faint">Your trade</p>
             <p className="mt-1 text-sm">{t.text}</p>
           </li>
         ))}
         {!news && <li className="text-sm text-muted">Loading news…</li>}
         {news && !news.configured && (
-          <li className="rounded-xl border border-amber-300/30 bg-amber-300/5 p-3 text-sm text-muted">
+          <li className="rounded-panel border border-line bg-panel-2 p-3 text-sm text-muted">
             Add a <code className="text-gold">FINNHUB_API_KEY</code> on the server to show live market headlines here.
           </li>
         )}
         {news?.items.map((n) => (
-          <li key={n.id} className="rounded-xl border border-gold/20 bg-gold/[0.04] p-3">
-            <p className="font-mono text-[10px] tracking-wider text-muted">
+          <li key={n.id} className="rounded-panel border border-line bg-panel-2 p-3">
+            <p className="text-xs text-faint">
               {new Date(n.datetime * 1000).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} · {n.source.toUpperCase()}
             </p>
             <a href={n.url} target="_blank" rel="noopener noreferrer" className="mt-1 block text-sm font-medium hover:text-gold">
@@ -370,7 +361,7 @@ export function LivePortfolio({ data }: { data: LiveData }) {
       }
     >
       <p className="mb-4 text-sm text-muted">
-        Net worth <span className="tabular text-ink">{fmt(nw)} $RIALO</span> · cash <span className="tabular text-ink">{fmt(live.cash)}</span> · return{" "}
+        Net worth <span className="tabular text-ink">{fmt(nw)} $RIALO</span>, cash <span className="tabular text-ink">{fmt(live.cash)}</span>, return{" "}
         <span className={nw >= LIVE_GRANT ? "text-up" : "text-down"}>{(((nw - LIVE_GRANT) / LIVE_GRANT) * 100).toFixed(2)}%</span>
       </p>
       {entries.length === 0 ? (
@@ -378,7 +369,7 @@ export function LivePortfolio({ data }: { data: LiveData }) {
       ) : (
         <div className="overflow-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-[11px] uppercase tracking-wider text-muted">
+            <thead className="text-left text-xs text-muted">
               <tr>
                 <th className="pb-2 font-medium">Asset</th>
                 <th className="pb-2 text-right font-medium">Units</th>
@@ -394,17 +385,17 @@ export function LivePortfolio({ data }: { data: LiveData }) {
                 const value = h.qty * price;
                 const pnl = value - h.cost;
                 return (
-                  <tr key={id} className="border-t border-white/[0.06]">
+                  <tr key={id} className="border-t border-line">
                     <td className="py-2.5">
                       <span className="flex items-center gap-2">
                         <LiveAssetIcon id={id} category={a.category} className="h-4 w-4 text-gold" />
                         {a.name} <Badge tone="up">Owned</Badge>
                       </span>
                     </td>
-                    <td className="tabular text-right font-mono">{h.qty.toLocaleString("en-US", { maximumFractionDigits: 6 })}</td>
-                    <td className="tabular text-right font-mono">{fmtPrice(h.cost / h.qty)}</td>
-                    <td className="tabular text-right font-mono">{fmt(value)}</td>
-                    <td className={`tabular text-right font-mono ${pnl >= 0 ? "text-up" : "text-down"}`}>
+                    <td className="tabular text-right">{h.qty.toLocaleString("en-US", { maximumFractionDigits: 6 })}</td>
+                    <td className="tabular text-right">{fmtPrice(h.cost / h.qty)}</td>
+                    <td className="tabular text-right">{fmt(value)}</td>
+                    <td className={`tabular text-right ${pnl >= 0 ? "text-up" : "text-down"}`}>
                       {pnl >= 0 ? "+" : ""}
                       {fmt(pnl)}
                     </td>
